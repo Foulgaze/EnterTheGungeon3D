@@ -188,6 +188,9 @@ MonoBehaviour:
   floorCube: {fileID: 5846490171635117996, guid: 690078ad4c8e7364dbaa4ef58363405c, type: 3}
   desinationCube: {fileID: 5846490171635117996, guid: 4b9b99ab13569c84e82dc4949a35cbef, type: 3}
   roomNumber: 15
+  normalPillar: {fileID: 5358874093026062712, guid: 59c4ff25e1233124a88bf79ab33f8f5e, type: 3}
+  libraryPillar: {fileID: 6424423505343136520, guid: 12087bdf9df20a14693f780453cc1a50, type: 3}
+  libraryFloor: {fileID: 2800000, guid: 0f21dade39a4568418a76e790bcbaecc, type: 3}
 --- !u!114 &853161843
 MonoBehaviour:
   m_ObjectHideFlags: 0

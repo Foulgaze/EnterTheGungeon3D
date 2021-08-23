@@ -39,6 +39,9 @@ public class improvedLevelSpawner : MonoBehaviour
     UnityEngine.Object[] textures;
     UnityEngine.Object[] floorBlocks;
     UnityEngine.Object[] wallBlocks;
+    public GameObject normalPillar;
+    public GameObject libraryPillar;
+    public Texture2D libraryFloor;
 
     
 
@@ -92,8 +95,6 @@ public class improvedLevelSpawner : MonoBehaviour
           
                roomProperlyCreated = 1;
                spawnRooms(roomNumber);
-           
-           
         }
         if (roomProperlyCreated == 3)
         {
@@ -118,7 +119,13 @@ public class improvedLevelSpawner : MonoBehaviour
                 /* ((Room)createdRooms[i]).spawnFloor((GameObject)floorBlocks[0], (GameObject)floorBlocks[1], (GameObject)floorBlocks[2], (GameObject)floorBlocks[3], (GameObject)floorBlocks[4], (GameObject) floorBlocks[5]);
                  ((Room)createdRooms[i]).spawnAesteticWalls((GameObject)wallBlocks[0], (GameObject)wallBlocks[1]);
                  ((Room)createdRooms[i]).combineME();*/
-                ((Room)createdRooms[i]).spawnFloor(floorBlocks,wallBlocks) ;
+                if (((Room)createdRooms[i]).roomNum == 1)
+                {
+                    Debug.Log("Library");
+                }
+                ((Room)createdRooms[i]).spawnFloor(floorBlocks,wallBlocks, normalPillar, libraryPillar) ;
+                ((Room)createdRooms[i]).combineME();
+
             }
             
         }
@@ -173,12 +180,13 @@ public class improvedLevelSpawner : MonoBehaviour
                 topLeft = new Vector2Int(blockLocation.x - dimensions.x + 1, blockLocation.y + distanceUp);
                 break;
         }
-        Room r = new Room(num, topLeft, dimensions, transform.gameObject, cube,wallCube, pathCube,desinationCube,floorCube,createdRooms, roomVecs, textures, (GameObject) wallBlocks[0], floorBlocks, wallBlocks);
+        Room r = new Room(num, topLeft, dimensions, transform.gameObject, cube,wallCube, pathCube,desinationCube,floorCube,createdRooms, roomVecs, textures, (GameObject) wallBlocks[0], floorBlocks, wallBlocks, libraryFloor);
         r.originBlock = (Vector2Int)arr[1];
         r.originConnectionBlock = (Vector2Int)arr[2];
         r.originEdge = (int) arr[0];
         r.originBlock2 = (Vector2Int)arr[3];
         r.roomNum = Random.value > 0.5 ? 0 : 1;
+       
         Vector2Int randomInt = Vector2Int.zero;
         switch (roomSide)
         {
@@ -215,54 +223,9 @@ public class improvedLevelSpawner : MonoBehaviour
         return true;
     }
 
-    /*bool spawnNewRoom(int num, Room oldRoom, ArrayList arr, Vector2Int dimensions)
-    {
-        int roomSide = UnityEngine.Random.Range(0, 4);
-        Vector2Int blockLocation = (Vector2Int)arr[2];
-        Vector2Int topLeft = new Vector2Int(-1, -1);
-        int distanceLeft = 0;
-        int distanceUp = 0;
-
-        switch (roomSide)
-        {
-            case 0: //Block is on the top
-                distanceLeft = UnityEngine.Random.Range(1, dimensions.x - 1);
-                topLeft = new Vector2Int(blockLocation.x - distanceLeft, blockLocation.y);
-                break;
-            case 1: // Block is on the Bottom
-                distanceLeft = UnityEngine.Random.Range(1, dimensions.x - 1);
-                topLeft = new Vector2Int(blockLocation.x - distanceLeft, blockLocation.y + dimensions.y - 1);
-                break;
-            case 2: // Block is on the Left
-                distanceUp = UnityEngine.Random.Range(1, dimensions.y - 1);
-                topLeft = new Vector2Int(blockLocation.x, blockLocation.y + distanceUp);
-                break;
-            case 3:
-                distanceUp = UnityEngine.Random.Range(1, dimensions.y - 1);
-                topLeft = new Vector2Int(blockLocation.x - dimensions.x + 1, blockLocation.y + distanceUp);
-                break;
-        }
-        Room r = new Room(num, topLeft, dimensions, transform.gameObject, cube, wallCube, pathCube, desinationCube, floorCube, createdRooms, roomVecs);
-        r.originBlock = (Vector2Int)arr[1];
-        r.originConnectionBlock = (Vector2Int)arr[2];
-        r.originEdge = (int)arr[0];
-        HashSet<Vector2Int> tempArr = r.checkPathToOrigin(roomVecs, createdRooms);
-        if (!r.isValid || tempArr.Count == 0)
-        {
-            GameObject.Destroy(r.roomParent);
-            oldRoom.deleteExits();
-            return false;
-        }
-        roomVecs.UnionWith(tempArr);
-        r.spawnContainedRoom();
-        r.createPathToOrigin();
-        createdRooms.Add(r);
-        return true;
-    }*/
-
     void spawnRooms(int roomNum)
     {
-        Room r = new Room(0, new Vector2Int(0, 0), new Vector2Int(20, 20), transform.gameObject, cube, wallCube, pathCube, desinationCube, floorCube, createdRooms, roomVecs, textures, (GameObject) wallBlocks[0], floorBlocks, wallBlocks);
+        Room r = new Room(0, new Vector2Int(0, 0), new Vector2Int(20, 20), transform.gameObject, cube, wallCube, pathCube, desinationCube, floorCube, createdRooms, roomVecs, textures, (GameObject) wallBlocks[0], floorBlocks, wallBlocks, libraryFloor);
         r.originConnectionBlock = new Vector2Int(r.topLeft.x + (r.dimensions.x / 2), r.topLeft.y - (r.dimensions.y / 2));
         r.originConnectionBlock2 = new Vector2Int(r.topLeft.x + (r.dimensions.x / 2), r.topLeft.y - (r.dimensions.y / 2));
         r.originBlock = new Vector2Int(r.topLeft.x + (r.dimensions.x / 2), r.topLeft.y - (r.dimensions.y / 2));
@@ -294,9 +257,9 @@ public class improvedLevelSpawner : MonoBehaviour
   
 }
 
-public class Room{
+public class Room {
     public Vector2Int topLeft; // x ,z
-    public Vector2Int bottomRight; 
+    public Vector2Int bottomRight;
     public Vector2Int dimensions; // x, z
     public Vector2Int originBlock;
     public Vector2Int originBlock2;
@@ -328,20 +291,21 @@ public class Room{
     int[][] floorPlan;
     Object[] floorParentList;
     Object[] wallParentList;
-
-    public Room(int roomNum, Vector2Int v, Vector2Int dim, GameObject obj, GameObject fc, GameObject wc,GameObject pc, GameObject dc, GameObject rc, ArrayList createdRooms, HashSet<Vector2Int> vecs, UnityEngine.Object[] tex, GameObject vwc, Object[] floorTiles, Object[] wallTiles)
+    int[][] floorPlanRotation;
+    Texture2D libraryFloorTexture;
+    public Room(int roomNum, Vector2Int v, Vector2Int dim, GameObject obj, GameObject fc, GameObject wc, GameObject pc, GameObject dc, GameObject rc, ArrayList createdRooms, HashSet<Vector2Int> vecs, UnityEngine.Object[] tex, GameObject vwc, Object[] floorTiles, Object[] wallTiles, Texture2D libraryFloor)
     {
 
         topLeft = v;
         dimensions = dim;
         bottomRight = new Vector2Int(v.x + dim.x - 1, v.y - dim.y + 1);
-        if(createdRooms.Count == 0)
+        if (createdRooms.Count == 0)
         {
             isValid = true;
         }
         for (int i = 0; i < createdRooms.Count; i++)
         {
-            if (!doOverlap(v, bottomRight, ((Room) createdRooms[i]).topLeft, ((Room)createdRooms[i]).bottomRight)){
+            if (!doOverlap(v, bottomRight, ((Room)createdRooms[i]).topLeft, ((Room)createdRooms[i]).bottomRight)) {
                 isValid = true;
             }
             else
@@ -375,26 +339,34 @@ public class Room{
         visibleWallCube = vwc;
         roomType = Random.value < 0.7 ? 0 : 1;
         floorPlan = new int[dimensions.y + 2][];
-        for(int i =0; i < floorPlan.Length; i++)
+        floorPlanRotation = new int[dimensions.y + 2][];
+        floorParentList = new Object[floorTiles.Length];
+        wallParentList = new Object[wallTiles.Length];
+        libraryFloorTexture = libraryFloor;
+        for (int i = 0; i < floorPlan.Length; i++)
         {
             floorPlan[i] = new int[dimensions.x + 2];
-            for(int a = 0; a < floorPlan[i].Length; a++)
+            floorPlanRotation[i] = new int[dimensions.x + 2];
+            for (int a = 0; a < floorPlan[i].Length; a++)
             {
                 floorPlan[i][a] = -1;
+                floorPlanRotation[i][a] = 0;
             }
-                
         }
-        for(int i =0; i < floorTiles.Length; i++)
+        for (int i = 0; i < floorTiles.Length; i++)
         {
             GameObject newObj = new GameObject();
             newObj.name = "Floor: " + i;
             newObj.transform.parent = roomParent.transform;
+            floorParentList[i] = newObj;
         }
         for (int i = 0; i < wallTiles.Length; i++)
         {
             GameObject newObj = new GameObject();
             newObj.name = "Wall: " + i;
             newObj.transform.parent = roomParent.transform;
+            wallParentList[i] = newObj;
+
         }
 
     }
@@ -407,18 +379,27 @@ public class Room{
                 GameObject.Instantiate(floorCube, new Vector3(topLeft.x + i, 0, topLeft.y - a), Quaternion.Euler(0, 0, 0), floorParent.transform);
             }
         }*/
-        GameObject tempCube = GameObject.Instantiate(realFloorCube, new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 0));
+        GameObject tempCube = GameObject.Instantiate(realFloorCube, new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 0), floorParent.transform);
         tempCube.transform.position = new Vector3((topLeft.x + bottomRight.x) / 2.0f, 0, (topLeft.y + bottomRight.y) / 2.0f);
         tempCube.transform.localScale = new Vector3((Math.Abs(topLeft.x - bottomRight.x) + 1), 1, (Math.Abs(topLeft.y - bottomRight.y) + 1));
 
 
+        /* if (roomNum != 1)
+         {*/
+        tempCube.transform.GetComponent<MeshRenderer>().enabled = false;
+        /*  }
+          else
+          {
+              Material mat = new Material(Shader.Find("Ambient"));
+              mat.SetTexture("text", libraryFloorTexture);
+              tempCube.transform.GetComponent<MeshRenderer>().material = mat;
 
-       tempCube.transform.GetComponent<MeshRenderer>().enabled = false;
+          }*/
 
 
 
     }
-    bool doOverlap(Vector2Int l1, Vector2Int r1, Vector2Int l2,Vector2Int r2)
+    bool doOverlap(Vector2Int l1, Vector2Int r1, Vector2Int l2, Vector2Int r2)
     {
         l1 = new Vector2Int(l1.x - 2, l1.y + 2);
         r1 = new Vector2Int(r1.x + 2, r1.y - 2);
@@ -443,7 +424,7 @@ public class Room{
     public ArrayList SpawnExit(Vector2Int newRoomDistanceDimensions)
     {
 
-        Vector2Int exitLocation = new Vector2Int(-1,-1);
+        Vector2Int exitLocation = new Vector2Int(-1, -1);
         Vector2Int exitBlock = new Vector2Int(-1, -1);
         Vector2Int exitLocation2 = new Vector2Int(-1, -1);
         Vector2Int randomInt;
@@ -459,7 +440,7 @@ public class Room{
             {
                 case 0: //Top (X pos)
                     exitLocation = new Vector2Int(UnityEngine.Random.Range(topLeft.x + 3, topLeft.x + dimensions.x - 4), topLeft.y);
-                    randomInt = Random.value < 0.5 ?  Vector2Int.left : Vector2Int.right;
+                    randomInt = Random.value < 0.5 ? Vector2Int.left : Vector2Int.right;
                     exitLocation2 = exitLocation + randomInt;
                     exitBlock = new Vector2Int(UnityEngine.Random.Range(exitLocation.x - newRoomDistanceDimensions.x + 1, exitLocation.x + newRoomDistanceDimensions.x - 1), UnityEngine.Random.Range(topLeft.y + 3, topLeft.y + newRoomDistanceDimensions.y - 1));
                     break;
@@ -485,8 +466,8 @@ public class Room{
             }
             for (int i = 0; i < exitLocations.Count; i++)
             {
-                Vector2Int tempVec = (Vector2Int) exitLocations[i];
-                Vector2Int tempVec2 = (Vector2Int) exitLocations2[i];
+                Vector2Int tempVec = (Vector2Int)exitLocations[i];
+                Vector2Int tempVec2 = (Vector2Int)exitLocations2[i];
                 if (tempVec.Equals(exitLocation) || (tempVec + Vector2Int.up).Equals(exitLocation) || (tempVec + Vector2Int.down).Equals(exitLocation) || (tempVec + Vector2Int.left).Equals(exitLocation) || (tempVec + Vector2Int.right).Equals(exitLocation))
                 {
                     exitLocation = new Vector2Int(-1, -1);
@@ -497,9 +478,9 @@ public class Room{
                     exitLocation = new Vector2Int(-1, -1);
                     break;
                 }
-                
+
                 tempVec = originConnectionBlock;
-               
+
                 if (tempVec.Equals(exitLocation) || (tempVec + Vector2Int.up).Equals(exitLocation) || (tempVec + Vector2Int.down).Equals(exitLocation) || (tempVec + Vector2Int.left).Equals(exitLocation) || (tempVec + Vector2Int.right).Equals(exitLocation))
                 {
                     exitLocation = new Vector2Int(-1, -1);
@@ -537,15 +518,15 @@ public class Room{
 
 
             }
-          
+
             if ((exitLocation.x + 1 == exitBlock.x || exitLocation.x - 1 == exitBlock.x) || (exitLocation.y + 1 == exitBlock.y || exitLocation.y - 1 == exitBlock.y))
             {
                 exitLocation = new Vector2Int(-1, -1);
             }
-/*            if ((exitLocation2.x + 1 == exitBlock.x || exitLocation2.x - 1 == exitBlock.x) || (exitLocation2.y + 1 == exitBlock.y || exitLocation2.y - 1 == exitBlock.y))
-            {
-                exitLocation = new Vector2Int(-1, -1);
-            }*/
+            /*            if ((exitLocation2.x + 1 == exitBlock.x || exitLocation2.x - 1 == exitBlock.x) || (exitLocation2.y + 1 == exitBlock.y || exitLocation2.y - 1 == exitBlock.y))
+                        {
+                            exitLocation = new Vector2Int(-1, -1);
+                        }*/
             if ((exitLocation.x + 2 == exitBlock.x || exitLocation.x - 2 == exitBlock.x) || (exitLocation.y + 2 == exitBlock.y || exitLocation.y - 2 == exitBlock.y))
             {
                 exitLocation = new Vector2Int(-1, -1);
@@ -557,7 +538,7 @@ public class Room{
                 returnList.Add(2);
                 returnList.Add(new Vector2Int(0, -5));
                 returnList.Add(new Vector2Int(-5, -5));*/
-        
+
 
         exitLocations.Add(exitLocation);
         exitLocations2.Add(exitLocation2);
@@ -568,71 +549,7 @@ public class Room{
         return returnList;
 
     }
-/*    public ArrayList SpawnExit(Vector2Int newRoomDistanceDimensions)
-    {
-
-        Vector2Int exitLocation = new Vector2Int(-1, -1);
-        Vector2Int exitBlock = new Vector2Int(-1, -1);
-        int randomEdge = -1;
-        //int randomEdge = 1;
-        ArrayList returnList = new ArrayList();
-        while (exitLocation.Equals(new Vector2Int(-1, -1)))
-        {
-            randomEdge = UnityEngine.Random.Range(0, 4);
-            switch (randomEdge)
-            {
-                case 0: //Top (X pos)
-                    exitLocation = new Vector2Int(UnityEngine.Random.Range(topLeft.x + 1, topLeft.x + dimensions.x - 2), topLeft.y);
-                    exitBlock = new Vector2Int(UnityEngine.Random.Range(exitLocation.x - newRoomDistanceDimensions.x + 1, exitLocation.x + newRoomDistanceDimensions.x - 1), UnityEngine.Random.Range(topLeft.y + 3, topLeft.y + newRoomDistanceDimensions.y - 1));
-                    break;
-                case 1: // Bottom
-                    exitLocation = new Vector2Int(UnityEngine.Random.Range(topLeft.x + 1, topLeft.x + dimensions.x - 2), topLeft.y - dimensions.y + 1);
-                    exitBlock = new Vector2Int(UnityEngine.Random.Range(exitLocation.x - newRoomDistanceDimensions.x + 1, exitLocation.x + newRoomDistanceDimensions.x - 1), UnityEngine.Random.Range(exitLocation.y - 3, exitLocation.y - newRoomDistanceDimensions.y + 1));
-                    break;
-                case 2: // Left (Z Pos)
-                    exitLocation = new Vector2Int(topLeft.x, UnityEngine.Random.Range(topLeft.y - 1, topLeft.y - dimensions.y + 2));
-                    exitBlock = new Vector2Int(UnityEngine.Random.Range(topLeft.x - 3, topLeft.x - newRoomDistanceDimensions.x + 1), UnityEngine.Random.Range(exitLocation.y + newRoomDistanceDimensions.y - 1, exitLocation.y - newRoomDistanceDimensions.y + 1));
-                    break;
-                case 3: // Right 
-                    exitLocation = new Vector2Int(topLeft.x + dimensions.x - 1, UnityEngine.Random.Range(topLeft.y - 1, topLeft.y - dimensions.y + 2));
-                    exitBlock = new Vector2Int(UnityEngine.Random.Range(exitLocation.x + 3, exitLocation.x + newRoomDistanceDimensions.x - 1), UnityEngine.Random.Range(exitLocation.y - newRoomDistanceDimensions.x + 1, exitLocation.y + newRoomDistanceDimensions.x - 1));
-                    break;
-            }
-            for (int i = 0; i < exitLocations.Count; i++)
-            {
-                Vector2Int tempVec = (Vector2Int)exitLocations[i];
-                if (tempVec.Equals(exitLocation) || (tempVec + Vector2Int.up).Equals(exitLocation) || (tempVec + Vector2Int.down).Equals(exitLocation) || (tempVec + Vector2Int.left).Equals(exitLocation) || (tempVec + Vector2Int.right).Equals(exitLocation))
-                {
-                    exitLocation = new Vector2Int(-1, -1);
-                    break;
-                }
-                tempVec = originConnectionBlock;
-                if (tempVec.Equals(exitLocation) || (tempVec + Vector2Int.up).Equals(exitLocation) || (tempVec + Vector2Int.down).Equals(exitLocation) || (tempVec + Vector2Int.left).Equals(exitLocation) || (tempVec + Vector2Int.right).Equals(exitLocation))
-                {
-                    exitLocation = new Vector2Int(-1, -1);
-                    break;
-                }
-
-            }
-            if ((exitLocation.x + 1 == exitBlock.x || exitLocation.x - 1 == exitBlock.x) || (exitLocation.y + 1 == exitBlock.y || exitLocation.y - 1 == exitBlock.y))
-            {
-                exitLocation = new Vector2Int(-1, -1);
-            }
-            if ((exitLocation.x + 2 == exitBlock.x || exitLocation.x - 2 == exitBlock.x) || (exitLocation.y + 2 == exitBlock.y || exitLocation.y - 2 == exitBlock.y))
-            {
-                exitLocation = new Vector2Int(-1, -1);
-            }
-
-
-        }
-        exitLocations.Add(exitLocation);
-        returnList.Add(randomEdge);
-        returnList.Add(exitLocation);
-        returnList.Add(exitBlock);
-        return returnList;
-
-    }*///BACKUP
-    public HashSet<Vector2Int> checkPathToOrigin( HashSet<Vector2Int> pathBlocks, ArrayList rooms)
+    public HashSet<Vector2Int> checkPathToOrigin(HashSet<Vector2Int> pathBlocks, ArrayList rooms)
     {
         HashSet<Vector2Int> pathVectorCheck = new HashSet<Vector2Int>();
         HashSet<Vector2Int> secondPathVectorCheck = new HashSet<Vector2Int>();
@@ -648,7 +565,7 @@ public class Room{
             pathVectorCheck = checkOriginHelper(pathBlocks, rooms, originBlock, originConnectionBlock, false, highestVector.y);
             secondPathVectorCheck = checkOriginHelper(pathBlocks, rooms, originBlock2, originConnectionBlock2, true, highestVector.y);
         }
-       
+
         else if (originEdge == 2)
         {
             Vector2Int highestVector = originConnectionBlock.x > originConnectionBlock2.x ? originConnectionBlock2 : originConnectionBlock;
@@ -661,7 +578,7 @@ public class Room{
             pathVectorCheck = checkOriginHelper(pathBlocks, rooms, originBlock, originConnectionBlock, false, highestVector.x);
             secondPathVectorCheck = checkOriginHelper(pathBlocks, rooms, originBlock2, originConnectionBlock2, true, highestVector.x);
         }
-        
+
 
         if (pathVectorCheck.Count == 0 || secondPathVectorCheck.Count == 0)
         {
@@ -683,11 +600,11 @@ public class Room{
             {
                 accountForDifference++;
             }*/
-            if(originConnectionBlock.x == originBlock.x && originConnectionBlock2.x == originBlock2.x)
+            if (originConnectionBlock.x == originBlock.x && originConnectionBlock2.x == originBlock2.x)
             {
                 if (second)
                 {
-                    for(int i =0; i < accountForDifference - 1; i++)
+                    for (int i = 0; i < accountForDifference - 1; i++)
                     {
                         Vector2Int tempVec = new Vector2Int(passedOriginBlock.x, passedOriginBlock.y + i * direction);
                         if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
@@ -762,15 +679,15 @@ public class Room{
 
                 Vector2Int topVector = passedOriginConnectionBlock.y > originConnectionBlock.y ? passedOriginConnectionBlock : originConnectionBlock;
                 Vector2Int botVector = passedOriginConnectionBlock.Equals(topVector) ? originConnectionBlock : passedOriginConnectionBlock;
-                
-                if(passedOriginBlock.y < passedOriginConnectionBlock.y)
+
+                if (passedOriginBlock.y < passedOriginConnectionBlock.y)
                 {
                     if (passedOriginBlock.x > passedOriginConnectionBlock.x) // LEFT
                     {
                         pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y + 2, leftMost.x - 1, botVector.y - 1));
                         pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y + 2, rightMost.x + 1, topVector.y + 1));
 
-                        if(Math.Abs(botVector.x - leftMost.x) < 4)
+                        if (Math.Abs(botVector.x - leftMost.x) < 4)
                         {
                             isValid = false;
 
@@ -803,9 +720,9 @@ public class Room{
                         pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y + 2, leftMost.x - 1, topVector.y - 2));
                         pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y + 2, rightMost.x + 1, topVector.y - 2));
                     }
-                    
+
                 }
-                else if(passedOriginBlock.y > passedOriginConnectionBlock.y)
+                else if (passedOriginBlock.y > passedOriginConnectionBlock.y)
                 {
                     if (passedOriginBlock.x > passedOriginConnectionBlock.x) // DOWN LEFT
                     {
@@ -821,10 +738,10 @@ public class Room{
                         }
                         pathWalls.Add(new RectInt(topVector.x + 2, topVector.y + 1, leftMost.x - 2, topVector.y + 1));
 
-                        pathWalls.Add(new RectInt(botVector.x + 2, botVector.y - 1, rightMost.x , botVector.y - 1));
+                        pathWalls.Add(new RectInt(botVector.x + 2, botVector.y - 1, rightMost.x, botVector.y - 1));
 
                     }
-                    else if(passedOriginBlock.x < passedOriginConnectionBlock.x)
+                    else if (passedOriginBlock.x < passedOriginConnectionBlock.x)
                     {
                         pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y - 2, leftMost.x - 1, botVector.y - 1));
                         pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y - 2, rightMost.x + 1, topVector.y + 1));
@@ -833,7 +750,7 @@ public class Room{
                         {
                             isValid = false;
 
-                        return new HashSet<Vector2Int>();
+                            return new HashSet<Vector2Int>();
 
                         }
                         pathWalls.Add(new RectInt(topVector.x - 2, topVector.y + 1, rightMost.x + 2, topVector.y + 1));
@@ -845,10 +762,10 @@ public class Room{
                         pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y - 2, leftMost.x - 1, topVector.y + 2));
                         pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y - 2, rightMost.x + 1, topVector.y + 2));
                     }
-                    
+
                 }
-                
-              
+
+
 
 
             }
@@ -860,7 +777,7 @@ public class Room{
             if (originBlock.y == originConnectionBlock.y && originBlock2.y == originConnectionBlock2.y || originBlock.y == originConnectionBlock2.y && originConnectionBlock.y == originBlock2.y)
             {
                 cCheck = false;
-                for (int i = 1; i < Math.Abs(passedOriginBlock.x - passedOriginConnectionBlock.x) ; i++)
+                for (int i = 1; i < Math.Abs(passedOriginBlock.x - passedOriginConnectionBlock.x); i++)
                 {
                     Vector2Int tempVec = new Vector2Int(passedOriginBlock.x + i, passedOriginBlock.y);
                     if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
@@ -877,7 +794,7 @@ public class Room{
             }
             else
             {
-                
+
                 for (int i = 1; i < Math.Abs(passedOriginBlock.x - passedOriginConnectionBlock.x); i++)
                 {
                     Vector2Int tempVec = new Vector2Int(passedOriginBlock.x + i * direction, passedOriginBlock.y);
@@ -909,7 +826,7 @@ public class Room{
                     }
                 }
             }
-            
+
 
             if (second && cCheck)
             {
@@ -917,30 +834,30 @@ public class Room{
                 if (!(exitVectors.Contains(cornerCheck) || vectorHolder.Contains(cornerCheck)))
                 {
                     vectorHolder.Add(cornerCheck);
-                    
+
                 }
-               
+
                 cornerCheck = new Vector2Int(highestValue, originBlock2.y);
 
                 if (!(exitVectors.Contains(cornerCheck) || vectorHolder.Contains(cornerCheck)))
                 {
-                    
+
                     vectorHolder.Add(cornerCheck);
                 }
-                
+
 
             }
             if (second)
             {
-                
-                
-                
-                    Vector2Int topVector = passedOriginBlock.y > originBlock.y ? passedOriginBlock : originBlock;
-                    Vector2Int botVector = passedOriginBlock.Equals(topVector) ? originBlock : passedOriginBlock;
 
-                    Vector2Int leftMost = passedOriginConnectionBlock.x < originConnectionBlock.x ? passedOriginConnectionBlock : originConnectionBlock;
-                    Vector2Int rightMost = passedOriginConnectionBlock.Equals(leftMost) ? originConnectionBlock : passedOriginConnectionBlock;
-                if(direction == -1)
+
+
+                Vector2Int topVector = passedOriginBlock.y > originBlock.y ? passedOriginBlock : originBlock;
+                Vector2Int botVector = passedOriginBlock.Equals(topVector) ? originBlock : passedOriginBlock;
+
+                Vector2Int leftMost = passedOriginConnectionBlock.x < originConnectionBlock.x ? passedOriginConnectionBlock : originConnectionBlock;
+                Vector2Int rightMost = passedOriginConnectionBlock.Equals(leftMost) ? originConnectionBlock : passedOriginConnectionBlock;
+                if (direction == -1)
                 {
                     if (passedOriginBlock.y > passedOriginConnectionBlock.y) // DOWN
                     {
@@ -985,7 +902,7 @@ public class Room{
 
                         pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y + 2, leftMost.x - 1, botVector.y - 1));
                         pathWalls.Add(new RectInt(rightMost.x + 1, rightMost.y + 2, rightMost.x + 1, topVector.y + 1));
-                        
+
                     }
                     else if (passedOriginBlock.y < passedOriginConnectionBlock.y)// UP
                     {
@@ -1001,493 +918,20 @@ public class Room{
                         pathWalls.Add(new RectInt(topVector.x + 2, botVector.y - 1, rightMost.x - 2, botVector.y - 1));
                     }
                 }
-                    
-
-                   
-                    
-
-                    
-                    
 
 
-                }
+
+
+
+
+
+
+
             }
+        }
         exitVectors.Add(vectorHolder);
         return vectorHolder;
     }
-    /*HashSet<Vector2Int> checkOriginHelper(HashSet<Vector2Int> pathBlocks, ArrayList rooms, Vector2Int passedOriginBlock, Vector2Int passedOriginConnectionBlock, bool second, int highestValue)
-    {
-        HashSet<Vector2Int> vectorHolder = new HashSet<Vector2Int>();
-        if (originEdge == 0 || originEdge == 1)
-        {
-            int direction = originEdge == 0 ? 1 : -1;
-            int accountForDifference = Math.Abs(passedOriginBlock.y - passedOriginConnectionBlock.y);
-            *//*if (second)
-            {
-                accountForDifference++;
-            }*//*
-            if(originConnectionBlock.x == originBlock.x && originConnectionBlock2.x == originBlock2.x)
-            {
-                if (second)
-                {
-                    for(int i =0; i < accountForDifference - 1; i++)
-                    {
-                        Vector2Int tempVec = new Vector2Int(passedOriginBlock.x, passedOriginBlock.y + i * direction);
-                        if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                        {
-                            isValid = false;
-                            return new HashSet<Vector2Int>();
-                        }
-                        else
-                        {
-                            vectorHolder.Add(tempVec);
-                        }
-                        tempVec = new Vector2Int(originBlock.x, originBlock.y + i * direction);
-                        if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                        {
-                            isValid = false;
-                            return new HashSet<Vector2Int>();
-                        }
-                        else
-                        {
-                            vectorHolder.Add(tempVec);
-                        }
-                    }
-                }
-            }
-            else {
-                for (int i = 1; i < accountForDifference; i++)
-                {
-                    Vector2Int tempVec = new Vector2Int(passedOriginBlock.x, passedOriginBlock.y + i * direction);
-                    if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                    {
-                        isValid = false;
-                        return new HashSet<Vector2Int>();
-                    }
-                    else
-                    {
-                        vectorHolder.Add(tempVec);
-                    }
-                }
-                int leftRight = passedOriginBlock.x < passedOriginConnectionBlock.x ? 1 : -1;
-                for (int i = 0; i < Math.Abs(passedOriginBlock.x - passedOriginConnectionBlock.x); i++)
-                {
-                    Vector2Int tempVec = new Vector2Int(passedOriginBlock.x + i * leftRight, passedOriginConnectionBlock.y);
-                    if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                    {
-                        isValid = false;
-
-                        return new HashSet<Vector2Int>();
-                    }
-                    else
-                    {
-                        vectorHolder.Add(tempVec);
-                    }
-                }
-            }
-            if (second)
-            {
-                Vector2Int cornerCheck = new Vector2Int(originBlock.x, highestValue);
-                if (!(exitVectors.Contains(cornerCheck) || vectorHolder.Contains(cornerCheck)))
-                {
-                    vectorHolder.Add(cornerCheck);
-                }
-
-                cornerCheck = new Vector2Int(originBlock2.x, highestValue);
-
-                if (!(exitVectors.Contains(cornerCheck) || vectorHolder.Contains(cornerCheck)))
-                {
-                    vectorHolder.Add(cornerCheck);
-                }
-
-                Vector2Int leftMost = passedOriginBlock.x < originBlock.x ? passedOriginBlock : originBlock;
-                Vector2Int rightMost = passedOriginBlock.Equals(leftMost) ? originBlock : passedOriginBlock;
-
-                Vector2Int topVector = passedOriginConnectionBlock.y > originConnectionBlock.y ? passedOriginConnectionBlock : originConnectionBlock;
-                Vector2Int botVector = passedOriginConnectionBlock.Equals(topVector) ? originConnectionBlock : passedOriginConnectionBlock;
-                
-                if(passedOriginBlock.y < passedOriginConnectionBlock.y)
-                {
-                    if (passedOriginBlock.x > passedOriginConnectionBlock.x) // LEFT
-                    {
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y + 2, leftMost.x - 1, botVector.y - 1));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y + 2, rightMost.x + 1, topVector.y + 1));
-
-                        if(Math.Abs(botVector.x - leftMost.x) < 4)
-                        {
-                            isValid = false;
-
-                            return new HashSet<Vector2Int>();
-                        }
-                        pathWalls.Add(new RectInt(botVector.x + 2, botVector.y - 1, leftMost.x - 2, botVector.y - 1));
-
-                        pathWalls.Add(new RectInt(topVector.x + 2, topVector.y + 1, rightMost.x, topVector.y + 1));
-
-
-                    }
-                    else if (passedOriginBlock.x < passedOriginConnectionBlock.x)
-                    {
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y + 2, leftMost.x - 1, topVector.y));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y + 2, rightMost.x + 1, botVector.y - 2));
-
-                        if (Math.Abs(botVector.x - rightMost.x) < 4)
-                        {
-                            isValid = false;
-
-                            return new HashSet<Vector2Int>();
-
-                        }
-                        pathWalls.Add(new RectInt(botVector.x - 2, botVector.y - 1, rightMost.x + 1, botVector.y - 1));
-
-                        pathWalls.Add(new RectInt(topVector.x - 2, topVector.y + 1, leftMost.x - 1, topVector.y + 1));
-                    }
-                    else
-                    {
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y + 2, leftMost.x - 1, topVector.y - 2));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y + 2, rightMost.x + 1, topVector.y - 2));
-                    }
-                    
-                }
-                else if(passedOriginBlock.y > passedOriginConnectionBlock.y)
-                {
-                    if (passedOriginBlock.x > passedOriginConnectionBlock.x) // DOWN LEFT
-                    {
-
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y - 2, leftMost.x - 1, topVector.y + 1));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y - 2, rightMost.x + 1, botVector.y - 1));
-
-                        if (Math.Abs(botVector.x - leftMost.x) < 4)
-                        {
-                            isValid = false;
-
-                            return new HashSet<Vector2Int>();
-                        }
-                        pathWalls.Add(new RectInt(topVector.x + 2, topVector.y + 1, leftMost.x - 2, topVector.y + 1));
-
-                        pathWalls.Add(new RectInt(botVector.x + 2, botVector.y - 1, rightMost.x , botVector.y - 1));
-
-                    }
-                    else if(passedOriginBlock.x < passedOriginConnectionBlock.x)
-                    {
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y - 2, leftMost.x - 1, botVector.y - 1));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y - 2, rightMost.x + 1, topVector.y + 1));
-
-                        if (Math.Abs(botVector.x - rightMost.x) < 4)
-                        {
-                            isValid = false;
-
-                        return new HashSet<Vector2Int>();
-
-                        }
-                        pathWalls.Add(new RectInt(topVector.x - 2, topVector.y + 1, rightMost.x + 2, topVector.y + 1));
-
-                        pathWalls.Add(new RectInt(botVector.x - 2, botVector.y - 1, leftMost.x, botVector.y - 1));
-                    }
-                    else
-                    {
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y - 2, leftMost.x - 1, topVector.y + 2));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y - 2, rightMost.x + 1, topVector.y + 2));
-                    }
-                    
-                }
-                
-              
-
-
-            }
-        }
-        else if (originEdge == 2 || originEdge == 3)
-        {
-            int direction = originEdge == 2 ? -1 : 1;
-            
-            for (int i = 1; i < Math.Abs(passedOriginBlock.x - passedOriginConnectionBlock.x); i++)
-            {
-                Vector2Int tempVec = new Vector2Int(passedOriginBlock.x + i * direction, passedOriginBlock.y);
-                if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                {
-                    isValid = false;
-
-                    return new HashSet<Vector2Int>();
-                }
-                else
-                {
-                    vectorHolder.Add(tempVec);
-                }
-            }
-            int upDown = passedOriginBlock.y < passedOriginConnectionBlock.y ? 1 : -1;
-
-            for (int i = 0; i < Math.Abs(passedOriginBlock.y - passedOriginConnectionBlock.y); i++)
-            {
-                Vector2Int tempVec = new Vector2Int(passedOriginConnectionBlock.x, passedOriginBlock.y + i * upDown);
-                if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                {
-                    isValid = false;
-
-                    return new HashSet<Vector2Int>();
-                }
-                else
-                {
-                    vectorHolder.Add(tempVec);
-                }
-            }
-
-            if (second)
-            {
-                Vector2Int cornerCheck = new Vector2Int(highestValue, originBlock.y);
-                if (!(exitVectors.Contains(cornerCheck) || vectorHolder.Contains(cornerCheck)))
-                {
-                    vectorHolder.Add(cornerCheck);
-                }
-               
-                cornerCheck = new Vector2Int(highestValue, originBlock2.y);
-
-                if (!(exitVectors.Contains(cornerCheck) || vectorHolder.Contains(cornerCheck)))
-                {
-                    vectorHolder.Add(cornerCheck);
-                }
-                
-
-            }
-            if (second)
-            {
-                
-                
-                
-                    Vector2Int topVector = passedOriginBlock.y > originBlock.y ? passedOriginBlock : originBlock;
-                    Vector2Int botVector = passedOriginBlock.Equals(topVector) ? originBlock : passedOriginBlock;
-
-                    Vector2Int leftMost = passedOriginConnectionBlock.x < originConnectionBlock.x ? passedOriginConnectionBlock : originConnectionBlock;
-                    Vector2Int rightMost = passedOriginConnectionBlock.Equals(leftMost) ? originConnectionBlock : passedOriginConnectionBlock;
-                if(direction == -1)
-                {
-                    if (passedOriginBlock.y > passedOriginConnectionBlock.y) // DOWN
-                    {
-
-                        RectInt checkRect = new RectInt(topVector.x - 2, topVector.y + 1, leftMost.x - 1, topVector.y + 1);
-
-                        pathWalls.Add(checkRect);
-
-                        checkRect = new RectInt(topVector.x - 2, botVector.y - 1, rightMost.x + 1, botVector.y - 1);
-
-                        pathWalls.Add(checkRect);
-
-                        checkRect = new RectInt(leftMost.x - 1, leftMost.y + 2, leftMost.x - 1, topVector.y);
-
-                        pathWalls.Add(checkRect);
-
-                        checkRect = new RectInt(rightMost.x + 1, rightMost.y + 2, rightMost.x + 1, botVector.y - 2);
-
-                        pathWalls.Add(checkRect);
-                    }
-                    else if (passedOriginBlock.y < passedOriginConnectionBlock.y)// UP
-                    {
-
-                        pathWalls.Add(new RectInt(topVector.x - 2, topVector.y + 1, rightMost.x + 1, topVector.y + 1));
-                        pathWalls.Add(new RectInt(botVector.x - 2, botVector.y - 1, leftMost.x - 1, botVector.y - 1));
-
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y - 2, leftMost.x - 1, botVector.y));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, rightMost.y - 2, rightMost.x + 1, topVector.y + 2));
-                    }
-                    else
-                    {
-                        pathWalls.Add(new RectInt(topVector.x - 2, topVector.y + 1, rightMost.x + 2, topVector.y + 1));
-                        pathWalls.Add(new RectInt(topVector.x - 2, botVector.y - 1, rightMost.x + 2, botVector.y - 1));
-                    }
-                }
-                else
-                {
-                    if (passedOriginBlock.y > passedOriginConnectionBlock.y) // DOWN
-                    {
-                        pathWalls.Add(new RectInt(topVector.x + 2, topVector.y + 1, rightMost.x, topVector.y + 1));
-                        pathWalls.Add(new RectInt(topVector.x + 2, botVector.y - 1, leftMost.x - 2, botVector.y - 1));
-
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y + 2, leftMost.x - 1, botVector.y - 1));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, rightMost.y + 2, rightMost.x + 1, topVector.y + 1));
-                        
-                    }
-                    else if (passedOriginBlock.y < passedOriginConnectionBlock.y)// UP
-                    {
-                        pathWalls.Add(new RectInt(topVector.x + 2, topVector.y + 1, leftMost.x - 2, topVector.y + 1));
-                        pathWalls.Add(new RectInt(botVector.x + 2, botVector.y - 1, rightMost.x, botVector.y - 1));
-
-                        pathWalls.Add(new RectInt(leftMost.x - 1, leftMost.y - 2, leftMost.x - 1, topVector.y + 1));
-                        pathWalls.Add(new RectInt(rightMost.x + 1, leftMost.y - 2, rightMost.x + 1, botVector.y - 1));
-                    }
-                    else
-                    {
-                        pathWalls.Add(new RectInt(topVector.x + 2, topVector.y + 1, rightMost.x - 2, topVector.y + 1));
-                        pathWalls.Add(new RectInt(topVector.x + 2, botVector.y - 1, rightMost.x - 2, botVector.y - 1));
-                    }
-                }
-                    
-
-                   
-                    
-
-                    
-                    
-
-
-                }
-            }
-        exitVectors.Add(vectorHolder);
-        return vectorHolder;
-    }*/
-
-    /*public HashSet<Vector2Int> checkPathToOrigin(HashSet<Vector2Int> pathBlocks, ArrayList rooms)
-    {
-        HashSet<Vector2Int> vectorHolder = new HashSet<Vector2Int>();
-        if (originEdge == 0 || originEdge == 1)
-        {
-            int direction = originEdge == 0 ? 1 : -1;
-            for (int i = 1; i < Math.Abs(originBlock.y - originConnectionBlock.y); i++)
-            {
-                Vector2Int tempVec = new Vector2Int(originBlock.x, originBlock.y + i * direction);
-                if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                {
-                    isValid = false;
-                    return new HashSet<Vector2Int>();
-                }
-                else
-                {
-                    vectorHolder.Add(tempVec);
-                }
-            }
-            int leftRight = originBlock.x < originConnectionBlock.x ? 1 : -1;
-            for (int i = 0; i < Math.Abs(originBlock.x - originConnectionBlock.x); i++)
-            {
-                Vector2Int tempVec = new Vector2Int(originBlock.x + i * leftRight, originConnectionBlock.y);
-                if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                {
-                    isValid = false;
-
-                    return new HashSet<Vector2Int>();
-                }
-                else
-                {
-                    vectorHolder.Add(tempVec);
-                }
-            }
-
-            if (originConnectionBlock.x == originBlock.x)
-            {
-                pathWalls.Add(new RectInt(originBlock.x + -1 * leftRight, originBlock.y + 2 * direction, originBlock.x + -1 * leftRight, originBlock.y + Math.Abs(originBlock.y - originConnectionBlock.y) * direction - 2 * direction));
-                pathWalls.Add(new RectInt(originBlock.x + 1 * leftRight, originBlock.y + 2 * direction, originBlock.x + 1 * leftRight, originBlock.y + Math.Abs(originBlock.y - originConnectionBlock.y) * direction - 2 * direction));
-            }
-            else
-            {
-                pathWalls.Add(new RectInt(originBlock.x + -1 * leftRight, originBlock.y + 2 * direction, originBlock.x + -1 * leftRight, originBlock.y + Math.Abs(originBlock.y - originConnectionBlock.y) * direction));
-                pathWalls.Add(new RectInt(originBlock.x + 1 * leftRight, originBlock.y + 2 * direction, originBlock.x + 1 * leftRight, originBlock.y + Math.Abs(originBlock.y - originConnectionBlock.y) * direction + -1 * direction));
-                if (leftRight == -1 && direction == 1) // Up Left
-                {
-                    pathWalls.Add(new RectInt(originConnectionBlock.x + 2, originConnectionBlock.y + 1, originBlock.x + 1, originConnectionBlock.y + 1));
-                    if (Math.Abs(originBlock.x - originConnectionBlock.x) >= 4)
-                    {
-                        pathWalls.Add(new RectInt(originConnectionBlock.x + 2, originConnectionBlock.y - 1, originBlock.x - 2, originConnectionBlock.y - 1));
-
-                    }
-                }
-                else if (leftRight == -1 && direction == -1) // Down Left
-                {
-                    pathWalls.Add(new RectInt(originConnectionBlock.x + 2, originConnectionBlock.y - 1, originBlock.x + 1, originConnectionBlock.y - 1));
-                    if (Math.Abs(originBlock.x - originConnectionBlock.x) >= 4)
-                    {
-                        pathWalls.Add(new RectInt(originConnectionBlock.x + 2, originConnectionBlock.y + 1, originBlock.x - 2, originConnectionBlock.y + 1));
-                    }
-                }
-                else if (leftRight == 1 && direction == -1) // Down Right
-                {
-                    pathWalls.Add(new RectInt(originConnectionBlock.x - 2, originConnectionBlock.y - 1, originBlock.x - 1, originConnectionBlock.y - 1));
-                    if (Math.Abs(originBlock.x - originConnectionBlock.x) >= 4)
-                    {
-                        pathWalls.Add(new RectInt(originConnectionBlock.x - 2, originConnectionBlock.y + 1, originBlock.x + 2, originConnectionBlock.y + 1));
-                    }
-                }
-                else if (leftRight == 1 && direction == 1) // Up Right
-                {
-
-                    pathWalls.Add(new RectInt(originConnectionBlock.x - 2, originConnectionBlock.y + 1, originBlock.x - 1, originConnectionBlock.y + 1));
-                    if (Math.Abs(originBlock.x - originConnectionBlock.x) >= 4)
-                    {
-                        pathWalls.Add(new RectInt(originConnectionBlock.x - 2, originConnectionBlock.y - 1, originBlock.x + 2, originConnectionBlock.y - 1));
-                    }
-                }
-            }
-
-            if (leftRight == -1)
-            {
-                pathWalls.Add(new RectInt(originConnectionBlock.x - 2 * leftRight, originConnectionBlock.y + 1 * leftRight, originBlock.x - 1 * leftRight, originConnectionBlock.y + 1 * leftRight));
-                pathWalls.Add(new RectInt(originConnectionBlock.x - 2 * leftRight, originConnectionBlock.y - 1 * leftRight, originBlock.x + 2 * leftRight, originConnectionBlock.y - 1 * leftRight));
-            }
-            else
-            {
-                pathWalls.Add(new RectInt(originConnectionBlock.x - 2 * leftRight, originConnectionBlock.y - 1 * leftRight, originBlock.x - 1 * leftRight, originConnectionBlock.y - 1 * leftRight));
-                pathWalls.Add(new RectInt(originConnectionBlock.x - 2 * leftRight, originConnectionBlock.y + 1 * leftRight, originBlock.x + 2 * leftRight, originConnectionBlock.y + 1 * leftRight));
-            }
-
-
-
-
-        }
-        else if (originEdge == 2 || originEdge == 3)
-        {
-            int direction = originEdge == 2 ? -1 : 1;
-            for (int i = 1; i < Math.Abs(originBlock.x - originConnectionBlock.x); i++)
-            {
-                Vector2Int tempVec = new Vector2Int(originBlock.x + i * direction, originBlock.y);
-                if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                {
-                    isValid = false;
-
-                    return new HashSet<Vector2Int>();
-                }
-                else
-                {
-                    vectorHolder.Add(tempVec);
-                }
-            }
-            int upDown = originBlock.y < originConnectionBlock.y ? 1 : -1;
-
-            for (int i = 0; i < Math.Abs(originBlock.y - originConnectionBlock.y); i++)
-            {
-                Vector2Int tempVec = new Vector2Int(originConnectionBlock.x, originBlock.y + i * upDown);
-                if (pathBlocks.Contains(tempVec) || isIn(rooms, tempVec))
-                {
-                    isValid = false;
-
-                    return new HashSet<Vector2Int>();
-                }
-                else
-                {
-                    vectorHolder.Add(tempVec);
-                }
-            }
-            if (originBlock.y == originConnectionBlock.y)
-            {
-                pathWalls.Add(new RectInt(originBlock.x + 2 * direction, originBlock.y + -1 * upDown, originBlock.x + Math.Abs(originBlock.x - originConnectionBlock.x) * direction + -2 * direction, originBlock.y + -1 * upDown));
-                pathWalls.Add(new RectInt(originBlock.x + 2 * direction, originBlock.y + 1 * upDown, originBlock.x + Math.Abs(originBlock.x - originConnectionBlock.x) * direction + -2 * direction, originBlock.y + 1 * upDown));
-            }
-            else
-            {
-                pathWalls.Add(new RectInt(originBlock.x + 2 * direction, originBlock.y + -1 * upDown, originBlock.x + Math.Abs(originBlock.x - originConnectionBlock.x) * direction, originBlock.y + -1 * upDown));
-                pathWalls.Add(new RectInt(originBlock.x + 2 * direction, originBlock.y + 1 * upDown, originBlock.x + Math.Abs(originBlock.x - originConnectionBlock.x) * direction + -1 * direction, originBlock.y + 1 * upDown));
-
-                pathWalls.Add(new RectInt(originConnectionBlock.x + 1 * direction, originConnectionBlock.y - 2 * upDown, originConnectionBlock.x + 1 * direction, originConnectionBlock.y - (1 + Math.Abs(originBlock.y - originConnectionBlock.y)) * upDown));
-                if (Math.Abs(originBlock.y - originConnectionBlock.y) >= 4)
-                {
-                    pathWalls.Add(new RectInt(originConnectionBlock.x - 1 * direction, originConnectionBlock.y - 2 * upDown, originConnectionBlock.x - 1 * direction, originConnectionBlock.y - (1 + Math.Abs(originBlock.y - originConnectionBlock.y)) * upDown + 3 * upDown));
-
-                    //}
-                }
-
-
-            }
-
-            exitVectors.Add(vectorHolder);
-            return vectorHolder;
-
-        }
-    }*/
     public void deleteExits()
     {
         exitLocations.RemoveAt(exitLocations.Count - 1);
@@ -1496,15 +940,15 @@ public class Room{
     }
     public void createPathToOrigin()
     {
-        HashSet<Vector2Int> tempVecs = (HashSet<Vector2Int>) exitVectors[exitVectors.Count - 1];
-        tempVecs.UnionWith((HashSet<Vector2Int>) exitVectors[exitVectors.Count - 2]);
+        HashSet<Vector2Int> tempVecs = (HashSet<Vector2Int>)exitVectors[exitVectors.Count - 1];
+        tempVecs.UnionWith((HashSet<Vector2Int>)exitVectors[exitVectors.Count - 2]);
         foreach (Vector2Int vec in tempVecs)
         {
             GameObject.Instantiate(pathCube, new Vector3(vec.x, 0f, vec.y), Quaternion.Euler(0, 0, 0), pathParent.transform);
         }
         //GameObject.Instantiate(desinationCube, new Vector3(originConnectionBlock.x, 1, originConnectionBlock.y), Quaternion.Euler(0, 0, 0));
-/*        GameObject.Instantiate(desinationCube, new UnityEngine.Vector3(originConnectionBlock.x, 1, originConnectionBlock.y), UnityEngine.Quaternion.Euler(0, 0, 0));
-        GameObject.Instantiate(desinationCube, new UnityEngine.Vector3(originConnectionBlock2.x, 2, originConnectionBlock2.y), UnityEngine.Quaternion.Euler(0, 0, 0));*/
+        /*        GameObject.Instantiate(desinationCube, new UnityEngine.Vector3(originConnectionBlock.x, 1, originConnectionBlock.y), UnityEngine.Quaternion.Euler(0, 0, 0));
+                GameObject.Instantiate(desinationCube, new UnityEngine.Vector3(originConnectionBlock2.x, 2, originConnectionBlock2.y), UnityEngine.Quaternion.Euler(0, 0, 0));*/
     }
     public void addWalls()
     {
@@ -1524,16 +968,16 @@ public class Room{
         for (int i = topLeft.x - 1, a = topLeft.y + 1; i <= bottomRight.x + 1; i++)
         {
             Vector2Int topVec = new Vector2Int(i, topLeft.y);
-            Vector2Int botVec = new Vector2Int(i, bottomRight.y );
+            Vector2Int botVec = new Vector2Int(i, bottomRight.y);
 
-            if (!exitLocations.Contains(topVec) && !originConnectionBlock.Equals(topVec)  && !originConnectionBlock2.Equals(topVec) && !exitLocations2.Contains(topVec))
+            if (!exitLocations.Contains(topVec) && !originConnectionBlock.Equals(topVec) && !originConnectionBlock2.Equals(topVec) && !exitLocations2.Contains(topVec))
             {
                 topWallExitCheckRight.x = i;
             }
             else
             {
                 spawnWall(topWallExitCheckLeft, topWallExitCheckRight, wallCube);
-                topWallExitCheckLeft = topWallExitCheckRight + new Vector2Int(3,0);
+                topWallExitCheckLeft = topWallExitCheckRight + new Vector2Int(3, 0);
                 i++;
             }
             if (!exitLocations.Contains(botVec) && !originConnectionBlock.Equals(botVec) && !originConnectionBlock2.Equals(botVec) && !exitLocations2.Contains(botVec))
@@ -1553,7 +997,7 @@ public class Room{
         for (int i = topLeft.y, a = topLeft.x - 1; i >= bottomRight.y; i--)
         {
             Vector2Int leftVec = new Vector2Int(topLeft.x, i);
-            Vector2Int rightVec = new Vector2Int(bottomRight.x ,i);
+            Vector2Int rightVec = new Vector2Int(bottomRight.x, i);
             if (!exitLocations.Contains(leftVec) && !originConnectionBlock.Equals(leftVec) && !originConnectionBlock2.Equals(leftVec) && !exitLocations2.Contains(leftVec))
             {
                 leftWallExitCheckBot.y = i;
@@ -1587,11 +1031,11 @@ public class Room{
     }
     void spawnWall(Vector2Int tL, Vector2Int bR, GameObject wallType)
     {
-        GameObject wall = GameObject.Instantiate(wallCube, new Vector3((tL.x + bR.x) / 2.0f, ((int) wallCube.transform.localScale.y/2), (tL.y + bR.y) / 2.0f), Quaternion.Euler(0,0,0), wallParent.transform);
+        GameObject wall = GameObject.Instantiate(wallCube, new Vector3((tL.x + bR.x) / 2.0f, ((int)wallCube.transform.localScale.y / 2), (tL.y + bR.y) / 2.0f), Quaternion.Euler(0, 0, 0), wallParent.transform);
         wall.transform.localScale = new Vector3((Math.Abs(tL.x - bR.x) + 1), wall.transform.localScale.y, (Math.Abs(tL.y - bR.y) + 1));
         wall.GetComponent<MeshRenderer>().enabled = false;
 
-       
+
     }
     void spawnWall(Vector2Int tL, Vector2Int bR, GameObject wallType, bool gol)
     {
@@ -1607,26 +1051,26 @@ public class Room{
         Vector2Int smallerVec = tL.x < bR.x ? tL : bR;
         Vector2Int otherVec = smallerVec.Equals(tL) ? bR : tL;
 
-        
+
         for (int i = smallerVec.x; i <= otherVec.x; i++)
         {
             Vector2Int tempVec = new Vector2Int(i, tL.y);
             if (!placedWalls.Contains(tempVec))
             {
-                GameObject.Instantiate(wallType, new Vector3(i, wallType.transform.localScale.y/2.0f, tL.y), Quaternion.Euler(0, 0, 0), wallParent.transform);
+                GameObject.Instantiate(wallType, new Vector3(i, wallType.transform.localScale.y / 2.0f, tL.y), Quaternion.Euler(0, 0, 0), ((GameObject)wallParentList[0]).transform);
                 placedWalls.Add(tempVec);
             }
         }
-        
-       
+
+
         smallerVec = tL.y < bR.y ? tL : bR;
         otherVec = smallerVec.Equals(tL) ? bR : tL;
-        for (int i =smallerVec.y; i <= otherVec.y; i++)
+        for (int i = smallerVec.y; i <= otherVec.y; i++)
         {
             Vector2Int tempVec = new Vector2Int(tL.x, i);
             if (!placedWalls.Contains(tempVec))
             {
-                GameObject.Instantiate(wallType, new Vector3(tL.x, wallType.transform.localScale.y / 2.0f, i), Quaternion.Euler(0, 0, 0), wallParent.transform);
+                GameObject.Instantiate(wallType, new Vector3(tL.x, wallType.transform.localScale.y / 2.0f, i), Quaternion.Euler(0, 0, 0), ((GameObject)wallParentList[0]).transform);
                 placedWalls.Add(tempVec);
             }
 
@@ -1634,14 +1078,13 @@ public class Room{
 
 
     }
-
     public void spawnAesteticWalls(GameObject wall, GameObject edgeWall)
     {
         Debug.Log("ORIGINBLOCK1:" + originBlock);
         Debug.Log("ORIGINBLOCK2:" + originBlock2);
         Debug.Log("CORIGINBLOCK1:" + originConnectionBlock);
         Debug.Log("CORIGINBLOCK2:" + originConnectionBlock2);
-        for(int i = topLeft.x -1; i <= bottomRight.x + 1; i++)
+        for (int i = topLeft.x - 1; i <= bottomRight.x + 1; i++)
         {
             Vector2Int tempVec = new Vector2Int(i, topLeft.y);
             if (!originBlock.Equals(tempVec) && !originBlock2.Equals(tempVec) && !originConnectionBlock.Equals(tempVec) && !originConnectionBlock2.Equals(tempVec) && !exitLocations.Contains(tempVec) && !exitLocations2.Contains(tempVec))
@@ -1670,15 +1113,15 @@ public class Room{
                     GameObject.Instantiate(wall, new Vector3(i, (wall.transform.localScale.y / 2.0f), bottomRight.y - 1), Quaternion.Euler(0, 0, 0));
                 }
             }
-            
+
 
         }
 
-        for(int i = topLeft.y; i >= bottomRight.y; i--)
+        for (int i = topLeft.y; i >= bottomRight.y; i--)
         {
             Vector2Int tempVec = new Vector2Int(topLeft.x, i);
 
-            if(!originBlock.Equals(tempVec) && !originBlock2.Equals(tempVec) && !originConnectionBlock.Equals(tempVec) && !originConnectionBlock2.Equals(tempVec) && !exitLocations.Contains(tempVec) && !exitLocations2.Contains(tempVec))
+            if (!originBlock.Equals(tempVec) && !originBlock2.Equals(tempVec) && !originConnectionBlock.Equals(tempVec) && !originConnectionBlock2.Equals(tempVec) && !exitLocations.Contains(tempVec) && !exitLocations2.Contains(tempVec))
             {
                 GameObject.Instantiate(wall, new Vector3(topLeft.x - 1, (wall.transform.localScale.y / 2.0f), i), Quaternion.Euler(0, 0, 0));
             }
@@ -1691,13 +1134,13 @@ public class Room{
     }
     public bool isIn(Vector2Int point)
     {
-        
+
         //return ((point.x >= topLeft.x-1 && point.x <= bottomRight.x + 1) && (point.y <= topLeft.y+1 && point.y >= bottomRight.y-1));
-        return ((point.x >= topLeft.x && point.x <= bottomRight.x ) && (point.y <= topLeft.y && point.y >= bottomRight.y));
+        return ((point.x >= topLeft.x && point.x <= bottomRight.x) && (point.y <= topLeft.y && point.y >= bottomRight.y));
     }
     public bool specialIsIn(Vector2Int point)
     {
-        if(point.Equals(originBlock) || point.Equals(originBlock2) || point.Equals(originConnectionBlock) || point.Equals(originConnectionBlock2))
+        if (point.Equals(originBlock) || point.Equals(originBlock2) || point.Equals(originConnectionBlock) || point.Equals(originConnectionBlock2))
         {
             return ((point.x >= topLeft.x && point.x <= bottomRight.x) && (point.y <= topLeft.y && point.y >= bottomRight.y));
         }
@@ -1710,9 +1153,9 @@ public class Room{
     }
     public bool isIn(ArrayList rooms, Vector2Int point)
     {
-        for(int i =0; i < rooms.Count; i++)
+        for (int i = 0; i < rooms.Count; i++)
         {
-            if( ((Room)rooms[i]).isIn(point))
+            if (((Room)rooms[i]).isIn(point))
             {
                 return true;
             }
@@ -1732,7 +1175,6 @@ public class Room{
 
         return isIn(point);
     }
-
     public bool specialIsInCheck(ArrayList rooms, Vector2Int point)
     {
         for (int i = 0; i < rooms.Count; i++)
@@ -1747,156 +1189,17 @@ public class Room{
     }
     public void makeWallsNotTrigger()
     {
-        for(int i =0; i < wallParent.transform.childCount; i++)
+        for (int i = 0; i < wallParent.transform.childCount; i++)
         {
-            if(wallParent.transform.GetChild(i).GetComponent<BoxCollider>() != null)
+            if (wallParent.transform.GetChild(i).GetComponent<BoxCollider>() != null)
             {
                 wallParent.transform.GetChild(i).GetComponent<BoxCollider>().isTrigger = false;
 
             }
-            
+
         }
     }
-
-/*    public void textureME()
-    {
-        Texture2D floorText = new Texture2D(dimensions.x * 16, dimensions.y * 16);
-        for (int i = 0; i < dimensions.x; i++)
-        {
-            for (int a = 0; a < dimensions.y; a++)
-            {
-                Texture2D currText = Random.value < 0.7 ? (Texture2D) textures[7] : (Texture2D) textures[8];
-                floorText.SetPixels(0 + i * 16, 0 + a * 16, 16, 16, currText.GetPixels());
-            }
-        }
-
-        floorText.Apply();
-        floorText.filterMode = FilterMode.Point;
-        floorParent.transform.GetChild(0).GetComponent<MeshRenderer>().material.SetTexture("_MainTex", floorText);
-       
-    }*/
-
-    public void spawnFloor(GameObject basicFloor,GameObject alternateFloor, GameObject bigTile, GameObject edgeTile, GameObject modifiedEdgeTile, GameObject cornerTile) 
-        //Edge tile faces left as default
-        //Edge Tile Faces bot left
-    {
-        GameObject basicFloorHead = new GameObject();
-        basicFloorHead.transform.parent = floorParent.transform;
-        basicFloorHead.name = "basicFloorHead";
-
-        GameObject alternateFloorHead = new GameObject();
-        alternateFloorHead.transform.parent = floorParent.transform;
-        alternateFloorHead.name = "alternateFloorHead";
-
-        GameObject bigTileHead = new GameObject();
-        bigTileHead.transform.parent = floorParent.transform;
-        bigTileHead.name = "bigTileHead";
-
-        GameObject edgeTileHead = new GameObject();
-        edgeTileHead.transform.parent = floorParent.transform;
-        edgeTileHead.name = "edgeTileHead";
-
-        GameObject modifiedEdgeTileHead = new GameObject();
-        modifiedEdgeTileHead.transform.parent = floorParent.transform;
-        modifiedEdgeTileHead.name = "modifiedEdgeTileHead";
-
-        HashSet<Vector2Int> bigTiles = new HashSet<Vector2Int>();
-        HashSet<Vector2Int> noBigTiles = new HashSet<Vector2Int>();
-        for (int i = 0; i < dimensions[1]; i++)
-        {
-            for (int a = 0; a < dimensions[0]; a++)
-            {
-                if(i == 0 && a == 0) //Top left
-                {
-                    GameObject.Instantiate(cornerTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 90, 0), floorParent.transform);
-                }
-                else if (i == dimensions[1] - 1 && a == 0) // Bot Left
-                {
-                    GameObject.Instantiate(cornerTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 0, 0), floorParent.transform);
-                }
-                else if (i == 0 && a == dimensions[0] - 1) // Top Right
-                {
-                    GameObject.Instantiate(cornerTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 180, 0), floorParent.transform);
-                }
-                else if(i == dimensions[1] - 1 && a == dimensions[0] - 1) // Bot Right
-                {
-                    GameObject.Instantiate(cornerTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, -90, 0), floorParent.transform);
-                }
-                else if (i == 0 )
-                {
-                    if (Random.value < 0.7)
-                    {
-                        GameObject.Instantiate(edgeTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 90, 0), edgeTileHead.transform);
-                    }
-                    else
-                    {
-                        GameObject.Instantiate(modifiedEdgeTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 90, 0), modifiedEdgeTileHead.transform);
-                    }
-
-                }
-                else if(i == dimensions[1] - 1)
-                {
-                    if (Random.value < 0.7)
-                    {
-                        GameObject.Instantiate(edgeTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, -90, 0), edgeTileHead.transform);
-                    }
-                    else
-                    {
-                        GameObject.Instantiate(modifiedEdgeTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, -90, 0), modifiedEdgeTileHead.transform);
-                    }
-                } else if (a == 0)
-                {
-                    if (Random.value < 0.7)
-                    {
-                        GameObject.Instantiate(edgeTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 0, 0), edgeTileHead.transform);
-                    }
-                    else
-                    {
-                        GameObject.Instantiate(modifiedEdgeTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 0, 0), modifiedEdgeTileHead.transform);
-                    }
-                } else if (a == dimensions[0] - 1)
-                {
-                    if (Random.value < 0.7)
-                    {
-                        GameObject.Instantiate(edgeTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 180, 0), edgeTileHead.transform);
-                    }
-                    else
-                    {
-                        GameObject.Instantiate(modifiedEdgeTile, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 180, 0), modifiedEdgeTileHead.transform);
-                    }
-                }
-                else //This means its not on the edge
-                {
-                    if(!bigTiles.Contains(new Vector2Int(a, i)))
-                    {
-                        float rand = Random.value;
-                        if (rand < 0.03 && a + 1 < dimensions[0] - 1 && i + 1 < dimensions[1] - 1 && !noBigTiles.Contains(new Vector2Int (a,i)))
-                        {
-                            GameObject.Instantiate(bigTile, new Vector3(topLeft.x + a + 0.5f, 0.5f, topLeft.y - i - 0.5f), Quaternion.Euler(0, 0, 0),bigTileHead.transform);
-                            bigTiles.Add(new Vector2Int(a, i));
-                            bigTiles.Add(new Vector2Int(a + 1, i));
-                            bigTiles.Add(new Vector2Int(a, i + 1));
-                            bigTiles.Add(new Vector2Int(a + 1, i + 1));
-                            noBigTiles.Add(new Vector2Int(a - 1, i + 1));
-
-                        }
-                        else if (rand < 0.5)
-                        {
-                            GameObject.Instantiate(alternateFloor, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 0, 0), alternateFloorHead.transform);
-                        }
-                        else
-                        {
-                            GameObject.Instantiate(basicFloor, new Vector3(topLeft.x + a, 0.5f, topLeft.y - i), Quaternion.Euler(0, 0, 0), basicFloorHead.transform);
-
-                        }
-                    }
-                    
-                }
-            }
-        }
-    }
-
-    public void spawnFloor(Object[] floorBlocks, Object[] wallBlocks)
+    public void spawnFloor(Object[] floorBlocks, Object[] wallBlocks, GameObject normalPillar, GameObject libraryPillar)
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         GameObject secondCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1921,11 +1224,13 @@ public class Room{
             s += "]";
             Debug.Log(s);
         }*/
-        for (int i =0; i < floorPlan.Length; i++)
+
+        for (int i = 0; i < floorPlan.Length; i++)
         {
-            for(int a = 0; a < floorPlan[0].Length; a++)
+            for (int a = 0; a < floorPlan[0].Length; a++)
             {
                 GameObject tempCube;
+                GameObject parent;
                 int rotation = 0;
                 int index = floorPlan[i][a];
                 switch (index)
@@ -1934,34 +1239,43 @@ public class Room{
                         if (roomNum == 0)
                         {
                             tempCube = (GameObject)wallBlocks[0];
+                            parent = (GameObject)wallParentList[0];
                         }
                         else
                         {
-                            if (a == 1  & i == 0 || (a == floorPlan[0].Length - 2 && i == floorPlan.Length - 1))
+                            int tempRand;
+                            if (a == 1 & i == 0 || (a == floorPlan[0].Length - 2 && i == floorPlan.Length - 1))
                             {
-                                if(i == 0)
+                                if (i == 0)
                                 {
                                     rotation = 180;
                                 }
-                                tempCube = (GameObject)wallBlocks[Random.Range(8, 10)];
+                                tempRand = Random.Range(8, 10);
+
+                                tempCube = (GameObject)wallBlocks[tempRand];
 
                             }
-                            else if(a == 0 && i == 1 || a == floorPlan[0].Length - 1 && i == floorPlan.Length - 2)
+                            else if (a == 0 && i == 1 || a == floorPlan[0].Length - 1 && i == floorPlan.Length - 2)
                             {
                                 rotation = i == 1 ? 90 : -90;
-                                tempCube = (GameObject)wallBlocks[Random.Range(3, 5)];
+                                tempRand = Random.Range(3, 5);
+                                tempCube = (GameObject)wallBlocks[tempRand];
 
                             }
                             else if (a == 0 && i == floorPlan.Length - 2 || a == floorPlan[0].Length - 1 && i == 1)
                             {
                                 rotation = i == 1 ? -90 : 90;
-                                tempCube = (GameObject)wallBlocks[Random.Range(8, 10)];
+                                tempRand = Random.Range(8, 10);
+
+                                tempCube = (GameObject)wallBlocks[tempRand];
 
                             }
-                            else if ( a == floorPlan[0].Length - 2 && i == 0 || a == 1 && i == floorPlan.Length - 1)
+                            else if (a == floorPlan[0].Length - 2 && i == 0 || a == 1 && i == floorPlan.Length - 1)
                             {
                                 rotation = i == 0 ? -180 : 0;
-                                tempCube = (GameObject)wallBlocks[Random.Range(3, 5)];
+                                tempRand = Random.Range(3, 5);
+
+                                tempCube = (GameObject)wallBlocks[tempRand];
                             }
                             else
                             {
@@ -1980,9 +1294,11 @@ public class Room{
                                     rotation = -90;
 
                                 }
-                                tempCube = (GameObject)wallBlocks[Random.Range(5, 8)];
+                                tempRand = Random.Range(5, 8);
+                                tempCube = (GameObject)wallBlocks[tempRand];
 
                             }
+                            parent = (GameObject)wallParentList[tempRand];
 
 
 
@@ -1990,28 +1306,81 @@ public class Room{
                         break;
                     case 1:
                         tempCube = roomNum == 0 ? (GameObject)wallBlocks[1] : (GameObject)wallBlocks[2];
+                        parent = roomNum == 0 ? (GameObject)wallParentList[1] : (GameObject)wallParentList[2];
+
                         break;
                     case -3:
                         tempCube = roomNum == 0 ? (GameObject)wallBlocks[1] : (GameObject)wallBlocks[2];
+                        parent = roomNum == 0 ? (GameObject)wallParentList[1] : (GameObject)wallParentList[2];
+
+                        break;
+                    case -5:
+                        tempCube = roomNum == 0 ? normalPillar : libraryPillar;
+                        parent = wallParent;
+
+                        break;
+                    /* tempCube = roomNum == 0 ? (GameObject)wallBlocks[10] : (GameObject)wallBlocks[11];
+                        parent = wallParent;
+                        break;*/
+                    case 10:
+                        tempCube = (GameObject)floorBlocks[10 - 10];
+                        rotation = floorPlanRotation[i][a];
+                        parent = (GameObject)floorParentList[10 - 10];
+                        break;
+                    case 11:
+                        tempCube = (GameObject)floorBlocks[11 - 10];
+                        rotation = floorPlanRotation[i][a];
+                        parent = (GameObject)floorParentList[11 - 10];
+
+
+                        break;
+                    case 12:
+                        tempCube = (GameObject)floorBlocks[12 - 10];
+                        rotation = floorPlanRotation[i][a];
+                        parent = (GameObject)floorParentList[12 - 10];
+
+                        break;
+                    case 13:
+                        tempCube = (GameObject)floorBlocks[13 - 10];
+                        rotation = floorPlanRotation[i][a];
+                        parent = (GameObject)floorParentList[13 - 10];
+
+                        break;
+                    case 15:
+                        tempCube = (GameObject)floorBlocks[15 - 10];
+                        rotation = floorPlanRotation[i][a];
+                        parent = (GameObject)floorParentList[15 - 10];
+
                         break;
                     default:
-                        if(roomNum == 0)
+                        if (roomNum == 0)
                         {
                             tempCube = (GameObject)floorBlocks[0];
+                            parent = (GameObject)floorParentList[0];
                         }
                         else
                         {
                             tempCube = (GameObject)floorBlocks[6];
+                            parent = (GameObject)floorParentList[6];
                         }
-                        
+
                         break;
                 }
-                if(index != -2)
+                if (index != -2)
                 {
-                    
-                    GameObject.Instantiate(tempCube, new Vector3(topLeft.x - 1 + a, 0, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0));
+                    if (index == 12)
+                    {
+                        GameObject.Instantiate(tempCube, new Vector3(topLeft.x - 1 / 2.0f + a, 0, topLeft.y + 1 / 2.0f - i), Quaternion.Euler(0, rotation, 0), parent.transform);
+
+                    }
+                    else
+                    {
+                        GameObject.Instantiate(tempCube, new Vector3(topLeft.x - 1 + a, 0, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), parent.transform);
+
+                    }
 
                 }
+
                 else
                 {
                     //Debug.Log("false 2");
@@ -2024,16 +1393,8 @@ public class Room{
             GameObject.Destroy(fourthCube);
 
 
-        }
-        
-    }
-    // 0 is cobble wall
-    // 1 is cobble corner
-
-    void fillFloorPlanLibrary()
-    {
-
-    }
+            }
+    }        
     void fillFloorPlanNormal()
     {
      /*   Debug.Log("originConnection: " + originConnectionBlock);
@@ -2086,21 +1447,21 @@ public class Room{
                     if(i == 1)
                     {
                         floorPlan[0][a] = -2;
-                        GameObject.Instantiate(desinationCube, new Vector3(topLeft.x - 1 + a, 0, topLeft.y + 1), Quaternion.Euler(0, 0, 0));
+                       // GameObject.Instantiate(desinationCube, new Vector3(topLeft.x - 1 + a, 0, topLeft.y + 1), Quaternion.Euler(0, 0, 0));
                     } else if (a == 1)
                     {
-                        GameObject.Instantiate(desinationCube, new Vector3(topLeft.x - 1, 0, topLeft.y + 1 - i), Quaternion.Euler(0, 0, 0));
+                        //GameObject.Instantiate(desinationCube, new Vector3(topLeft.x - 1, 0, topLeft.y + 1 - i), Quaternion.Euler(0, 0, 0));
                         floorPlan[i][a-1] = -2;
 
                     }
                     else if (i == floorPlan.Length - 2)
                     {
-                        GameObject.Instantiate(desinationCube, new Vector3(topLeft.x - 1 + a, 0, bottomRight.y - 1), Quaternion.Euler(0, 0, 0));
+                        //GameObject.Instantiate(desinationCube, new Vector3(topLeft.x - 1 + a, 0, bottomRight.y - 1), Quaternion.Euler(0, 0, 0));
                         floorPlan[floorPlan.Length - 1][a] = -2;
                     }
                     else if (a == floorPlan[0].Length - 2)
                     {
-                        GameObject.Instantiate(desinationCube, new Vector3(bottomRight.x + 1, 0, topLeft.y + 1 - i), Quaternion.Euler(0, 0, 0));
+                        //GameObject.Instantiate(desinationCube, new Vector3(bottomRight.x + 1, 0, topLeft.y + 1 - i), Quaternion.Euler(0, 0, 0));
                         floorPlan[i][a + 1] = -2;
 
                     }
@@ -2122,14 +1483,13 @@ public class Room{
         int featuresAdded = 0;
         int roomFeatures = Random.Range(0, 15);
         //roomFeatures = 7;
-        int pillar = Random.value > 0.9 ? -2 : -3;
+        int pillar = Random.value > 0.9 ? -2 : -5;
 
         //
         //
         //
         //
-
-        Debug.Log(roomFeatures);
+        roomParent.name += (" | DN" + roomFeatures);
         switch (roomFeatures)
         {
             case 0: // 1 Middle Pillar
@@ -2172,7 +1532,7 @@ public class Room{
                 addMiddlePillar(new Vector2Int(0, 0), new Vector2Int(dimensions.x, (int)Math.Ceiling(dimensions.y / 2.0)), 0, pillar); // Top X
                 curvedWallX(xStart, dimensions.y - (dimensions.y / 2 / 2) + 1, curveDirection * -1);
                 break;
-            case 8: // Two Pillars on Bottom Curve on top
+            case 8: // Two Pillars on Bottom Curve on bottom
                 addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
                 addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
                 curvedWallX(xStart, dimensions.y - (dimensions.y / 2 / 2) + 1, curveDirection * -1);
@@ -2207,14 +1567,18 @@ public class Room{
                 roomDecorationX();
                 floorHolesY();
                 break;
-            case 18:
-                
+            case 18: //Pillars on bottom, curve on top
+                addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                curvedWallX(xStart, dimensions.y / 2 / 2, curveDirection);
                 break;
-            case 19:
-                
+            case 19: // Curve on top
+                curvedWallX(xStart, dimensions.y / 2 / 2, curveDirection);
+
                 break;
             case 20:
-                
+                addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
                 break;
             case 21:
                 
@@ -2243,26 +1607,15 @@ public class Room{
 
         }
         
-        
+        if(roomNum == 0)
+        {
+
+            floorTilePlacer();
+        }
 
 
-    /*float randomValue = Random.value;
-    if(randomValue <= 0.25) // Middle Pillar
-    {
-
-    } else if (randomValue <= 0.5) // Two Pillar
-    {
-
-    } else if (randomValue <= 0.75) // Four PIllar
-    {
-
-    }
-    else // Room
-    {
-
-    }*/
+   
 }
-
     bool addMiddlePillar(Vector2Int newTopLeft, Vector2Int dimenVec, int scale, int pillarNum)
     {
         
@@ -2272,7 +1625,7 @@ public class Room{
         {
             if (middleBlock.y != (int)middleBlock.y)
             {
-                Debug.Log("X IS ODD, Y IS ODD");
+               // Debug.Log("X IS ODD, Y IS ODD");
                 for (int i = (int)middleBlock.x - 2 - scale; i < middleBlock.x + 4 + scale; i++)
                 {
                     for (int a = (int)middleBlock.y + 4 + scale; a > middleBlock.y - 3 - scale; a--)
@@ -2291,12 +1644,52 @@ public class Room{
                         floorPlan[newTopLeft.y + a][newTopLeft.x + i]  = pillarNum;
                     }
                 }
+                Debug.Log("COLORING");
+                for (int i = (int)middleBlock.x - scale - 1; i < middleBlock.x + 3 + scale; i++)
+                {
+                    for (int a = (int)middleBlock.y + 3 + scale; a > middleBlock.y - 2 - scale; a--)
+                    {
+                        if (i == middleBlock.x - scale - 1) //Top 
+                        {
+                            if(a == middleBlock.y + 3 + scale)
+                            {
+                                floorPlan[i][a] = 15;
+                                floorPlanRotation[i][a] = 90;
+                            }
+                            else if(a == middleBlock.y - 2 - scale - 1)
+                            {
+                                floorPlan[i][a] = 15;
+                                floorPlanRotation[i][a] = 180; 
+                            }
+                        } else if (i == middleBlock.x + 3 + scale - 1) // Bot
+                        {
+                            if (a == middleBlock.y + 3 + scale)
+                            {
+                                floorPlan[i][a] = 15;
+                            }
+                            else if (a == middleBlock.y - 2 - scale - 1)
+                            {
+                                floorPlan[i][a] = 15;
+                                floorPlanRotation[i][a] = -90;
+
+                            }
+                        } else if (a == middleBlock.y + 3 + scale) // Left
+                        {
+                            floorPlan[i][a] = 13;
+                            floorPlanRotation[i][a] = 0;
+                        } else if(a == middleBlock.y - 2 - scale - 1) // Right
+                        {
+                            floorPlan[i][a] = 13;
+                            floorPlanRotation[i][a] = 180;
+                        }
+                    }
+                }
                 //floorPlan[(int) middleBlock.y][(int) middleBlock.x] = 1;
-                
+
 
                 return true;
             }
-            Debug.Log("X IS ODD, Y IS EVEN");
+            //Debug.Log("X IS ODD, Y IS EVEN");
 
             for (int i = (int) Math.Ceiling(middleBlock.x) - 3 - scale; i < (int) Math.Ceiling(middleBlock.x) + 4 + scale; i++)
             {
@@ -2308,13 +1701,7 @@ public class Room{
                     }
                 }
             }
-            for (int i = (int)Math.Ceiling(middleBlock.x) - 1 - scale; i < (int)Math.Ceiling(middleBlock.x) + 2 + scale; i++)
-            {
-                for (int a = (int)middleBlock.y + 1 + scale; a > (int)middleBlock.y - 1 - scale; a--)
-                {
-                    floorPlan[newTopLeft.y + a][newTopLeft.x + i] = pillarNum;
-                }
-            }
+            
             //floorPlan[(int)middleBlock.y][(int)middleBlock.x] = 1;
 
             return true;
@@ -2322,7 +1709,7 @@ public class Room{
         }
         else if (middleBlock.y != (int)middleBlock.y) // NO MIDDLE on x,  y
         {
-            Debug.Log("X IS EVEN, Y IS ODD"); 
+           // Debug.Log("X IS EVEN, Y IS ODD"); 
 
             for (int i = (int)middleBlock.x - 3 - scale; i < middleBlock.x + 5 + scale; i++)
             {
@@ -2348,7 +1735,7 @@ public class Room{
         }
         else //There is a middle
         {
-            Debug.Log("EVEN, EVEN");
+           // Debug.Log("EVEN, EVEN");
             /* if (floorPlan[(int) middleBlock.y][(int) middleBlock.x] == -1 && floorPlan[(int)middleBlock.y - 1][(int)middleBlock.x] == -1 && floorPlan[(int)middleBlock.y - 1][(int)middleBlock.x + 1] == -1 && floorPlan[(int)middleBlock.y][(int)middleBlock.x + 1] == -1)
              {
              
@@ -2406,7 +1793,6 @@ public class Room{
         }
         return point.Equals(originBlock) || point.Equals(originBlock2) || point.Equals(originConnectionBlock) || point.Equals(originConnectionBlock2);
     }
-
     bool divideRoomY()
     {
         int middlePoint = dimensions.x % 2 == 0 ? Random.value > 0.5 ? dimensions.x / 2 + 1 : dimensions.x / 2  : dimensions.x / 2;
@@ -2426,8 +1812,8 @@ public class Room{
 
         for (int i = 1; i < scale; i++)
         {
-            floorPlan[i][middlePoint] = 1;
-            floorPlan[floorPlan.Length - 1 - i][middlePoint] = 1;
+            floorPlan[i][middlePoint] = -5;
+            floorPlan[floorPlan.Length - 1 - i][middlePoint] = -5;
         }
         return true;
         /*for (int i = dimensions.y - 1; i > dimensions.y / 2; i--)
@@ -2456,8 +1842,8 @@ public class Room{
 
         for (int i = 1; i < scale; i++)
         {
-            floorPlan[middlePoint][i] = 1;
-            floorPlan[middlePoint][floorPlan[0].Length - 1 - i] = 1;
+            floorPlan[middlePoint][i] = -5;
+            floorPlan[middlePoint][floorPlan[0].Length - 1 - i] = -5;
         }
         return true;
         
@@ -2471,7 +1857,6 @@ public class Room{
         }
         return false;
     }
-
     bool roomDecorationX()
     {
         int start = Random.Range(3, dimensions.x / 2);
@@ -2483,7 +1868,6 @@ public class Room{
         return false;
         
     }
-   
     bool curvedWallY(int start,int xPosition, int curveDirection)
     {
         
@@ -2521,11 +1905,11 @@ public class Room{
 
         for (int i = start; i < dimensions.y - start; i++)
         {
-            floorPlan[i][xPosition] = 1;
-            floorPlan[floorPlan.Length - 1 - i][xPosition] = 1;
+            floorPlan[i][xPosition] = -5;
+            floorPlan[floorPlan.Length - 1 - i][xPosition] = -5;
         }
-        floorPlan[start][xPosition - curveDirection] = 1;
-        floorPlan[floorPlan.Length - 1 - start][xPosition - curveDirection] = 1;
+        floorPlan[start][xPosition - curveDirection] = -5;
+        floorPlan[floorPlan.Length - 1 - start][xPosition - curveDirection] = -5;
         return true;
            
     }
@@ -2559,15 +1943,14 @@ public class Room{
 
         for (int i = start; i < dimensions.x - start; i++)
         {
-            floorPlan[xPosition][i] = 1;
-            floorPlan[xPosition][floorPlan[0].Length - 1 - i] = 1;
+            floorPlan[xPosition][i] = -5;
+            floorPlan[xPosition][floorPlan[0].Length - 1 - i] = -5;
         }
-        floorPlan[xPosition - curveDirection][start] = 1;
-        floorPlan[xPosition - curveDirection][floorPlan[0].Length - 1 - start] = 1;
+        floorPlan[xPosition - curveDirection][start] = -5;
+        floorPlan[xPosition - curveDirection][floorPlan[0].Length - 1 - start] = -5;
         return true;
            
     }
-
     bool floorHolesX()
     {
         int leftMiddle;
@@ -2606,7 +1989,6 @@ public class Room{
         }
         return true;
     }
-
     bool floorHolesY()
     {
         int leftMiddle;
@@ -2645,61 +2027,169 @@ public class Room{
         }
         return true;
     }
-
-    void floorTilePlacer()
+    void floorTilePlacer()// Tile Name + 10
     {
-        for(int i = 0; i < floorPlan.Length; i++)
+        for (int i = 0; i < floorPlan.Length; i++)
         {
-            for(int a = 0; a < floorPlan[0].Length; a++)
+            for (int a = 0; a < floorPlan[0].Length; a++)
             {
+                if(floorPlan[i][a] == -1)
+                {
+                    if (i == 1) // Top Layer
+                    {
+                        if (a == 1) // Top Right 
+                        {
+                            floorPlan[i][a] = 15;
+                            floorPlanRotation[i][a] = 90;
+                        }
+                        else if (a == floorPlan[0].Length - 2) // Top Left
+                        {
+                            floorPlan[i][a] = 15;
+                            floorPlanRotation[i][a] = 180;
+                        }
+                        else
+                        {
+                            floorPlan[i][a] = 13;
+                            floorPlanRotation[i][a] = 90;
+                        }
 
+                    }
+                    else if (i == floorPlan.Length - 2) // Bottom Layer
+                    {
+                        if (a == 1) // Bot Right
+                        {
+                            floorPlan[i][a] = 15;
+                            floorPlanRotation[i][a] = 0;
+                        }
+                        else if (a == floorPlan[0].Length - 2) // Bot Left
+                        {
+                            floorPlan[i][a] = 15;
+                            floorPlanRotation[i][a] = -90;
+                        }
+                        else
+                        {
+                            floorPlan[i][a] = 13;
+                            floorPlanRotation[i][a] = -90;
+                        }
+
+                    }
+                    else if (a == 1) // Left Side
+                    {
+                        floorPlan[i][a] = 13;
+                        floorPlanRotation[i][a] = 0;
+                    }
+                    else if (a == floorPlan[0].Length - 2) // Right Side
+                    {
+                        floorPlan[i][a] = 13;
+                        floorPlanRotation[i][a] = 180;
+                    }
+                    else // In Middle somewhere
+                    {
+                        float rand = Random.value;
+                        while (rand < 1.00)
+                        {
+
+                            if (rand < 0.5)
+                            {
+                                floorPlan[i][a] = 10;
+                                rand = 2;
+                            }
+                            else if (rand < 0.95)
+                            {
+                                floorPlan[i][a] = 11;
+                                rand = 2;
+
+                            }
+                            else
+                            {
+                                if (i + 1 < floorPlan.Length - 1 && i - 1 > -1 && a + 1 < floorPlan[0].Length - 2 && a - 1 > -1 && i < floorPlan.Length - 3 && a < floorPlan[0].Length - 3)
+                                {
+                                    if (floorPlan[i + 1][a] == -1 && floorPlan[i + 1][a + 1] == -1 && floorPlan[i][a + 1] == -1 && floorPlan[i][a] == -1)
+                                    {
+                                        floorPlan[i][a] = 12;
+                                        floorPlan[i + 1][a] = -2;
+                                        floorPlan[i + 1][a + 1] = -2;
+                                        floorPlan[i][a + 1] = -2;
+                                        rand = 2;
+
+                                    }
+                                    else
+                                    {
+                                        rand = Random.value;
+                                    }
+                                }
+                                else
+                                {
+                                    rand = Random.value;
+
+                                }
+
+                            }
+                        }
+
+                    }
+                }
+                
             }
         }
     }
-
-    
-
     public void combineME()
     {
-        for(int i = 0 ; i < floorParent.transform.childCount - 4; i++)
+
+        for(int b =0; b < roomParent.transform.childCount; b++)
         {
-
-            GameObject currentGO = floorParent.transform.GetChild(i).gameObject;
-            if(currentGO.transform.childCount > 0)
-            {
-                Material tempMat = currentGO.transform.GetChild(0).GetComponent<MeshRenderer>().material;
-
-                Vector3 position = currentGO.transform.position;
-                currentGO.transform.position = Vector3.zero;
-
-                currentGO.AddComponent<MeshFilter>();
-                currentGO.AddComponent<MeshRenderer>();
-
-                MeshFilter[] meshFilters = currentGO.GetComponentsInChildren<MeshFilter>();
-                CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-
-                for (int a = 0; a < meshFilters.Length; a++)
+            GameObject currGO = roomParent.transform.GetChild(b).gameObject;
+            if (!currGO.Equals(wallParent) && !currGO.Equals(floorParent) && !currGO.Equals(pathParent))   {
+                if (currGO.transform.childCount > 0)
                 {
-                    combine[a].mesh = meshFilters[a].sharedMesh;
-                    combine[a].transform = meshFilters[a].transform.localToWorldMatrix;
-                    meshFilters[a].gameObject.SetActive(false);
+                    Material tempMat = currGO.transform.GetChild(0).GetComponent<MeshRenderer>().material;
+                    bool isEnabled = true;
+
+
+                    Vector3 position = currGO.transform.position;
+                    currGO.transform.position = Vector3.zero;
+
+                    currGO.AddComponent<MeshFilter>();
+                    currGO.AddComponent<MeshRenderer>();
+
+                    MeshFilter[] meshFilters = currGO.GetComponentsInChildren<MeshFilter>();
+                    CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+
+                    for (int a = 0; a < meshFilters.Length; a++)
+                    {
+                        combine[a].mesh = meshFilters[a].sharedMesh;
+                        combine[a].transform = meshFilters[a].transform.localToWorldMatrix;
+                        meshFilters[a].gameObject.SetActive(false);
+                    }
+
+
+
+                    Mesh m = new Mesh();
+                    m.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                    currGO.transform.GetComponent<MeshFilter>().mesh = m;
+                    CombineInstance[] secondCombine = new CombineInstance[meshFilters.Length];
+                    currGO.transform.GetComponent<MeshFilter>().mesh.CombineMeshes(combine, true, true);
+                    currGO.transform.gameObject.SetActive(true);
+
+                    currGO.transform.position = position;
+                    currGO.transform.GetComponent<MeshRenderer>().material = tempMat;
+
+                    if (currGO.Equals(pathParent))
+                    {
+                        currGO.AddComponent<BoxCollider>();
+                        currGO.AddComponent<Rigidbody>();
+                        currGO.transform.GetComponent<Rigidbody>().isKinematic = true;
+                    }
                 }
-
-
-
-                Mesh m = new Mesh();
-                m.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-                currentGO.transform.GetComponent<MeshFilter>().mesh = m;
-                CombineInstance[] secondCombine = new CombineInstance[meshFilters.Length];
-                currentGO.transform.GetComponent<MeshFilter>().mesh.CombineMeshes(combine, true, true);
-                currentGO.transform.gameObject.SetActive(true);
-
-                currentGO.transform.position = position;
-                currentGO.transform.GetComponent<MeshRenderer>().material = tempMat;
-                
             }
             
+            
+            
+
         }
+
+       
+        
         
     }
 }
