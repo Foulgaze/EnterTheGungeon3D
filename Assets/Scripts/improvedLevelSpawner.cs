@@ -39,6 +39,7 @@ public class improvedLevelSpawner : MonoBehaviour
     UnityEngine.Object[] textures;
     UnityEngine.Object[] floorBlocks;
     UnityEngine.Object[] wallBlocks;
+    UnityEngine.Object[] floorObjects;
     public GameObject normalPillar;
     public GameObject libraryPillar;
     public Texture2D libraryFloor;
@@ -50,19 +51,25 @@ public class improvedLevelSpawner : MonoBehaviour
     {
         loadFloorBlocks();
         loadWallBlocks();
+        loadFloorObjects();
 
     }
 
     void loadFloorBlocks()
     {
         floorBlocks = Resources.LoadAll("floor", typeof(GameObject));
-        
     }
     void loadWallBlocks()
     {
         wallBlocks = Resources.LoadAll("walls", typeof(GameObject));
-       
     }
+
+    void loadFloorObjects()
+    {
+        floorObjects = Resources.LoadAll("floorObjects", typeof(GameObject));
+
+    }
+
 
     // Update is called once per frame
     void Update()
@@ -123,7 +130,7 @@ public class improvedLevelSpawner : MonoBehaviour
                 {
                     Debug.Log("Library");
                 }
-                ((Room)createdRooms[i]).spawnFloor(floorBlocks,wallBlocks, normalPillar, libraryPillar) ;
+                ((Room)createdRooms[i]).spawnFloor(floorBlocks,wallBlocks, normalPillar, libraryPillar, floorObjects) ;
                 ((Room)createdRooms[i]).combineME();
 
             }
@@ -276,6 +283,7 @@ public class Room {
     GameObject floorParent = new GameObject();
     GameObject pathParent = new GameObject();
     GameObject wallParent = new GameObject();
+    GameObject decorationParent = new GameObject();
     GameObject floorCube;
     GameObject pathCube;
     GameObject wallCube;
@@ -335,6 +343,7 @@ public class Room {
         floorParent.transform.parent = roomParent.transform;
         pathParent.transform.parent = roomParent.transform;
         wallParent.transform.parent = roomParent.transform;
+        decorationParent.transform.parent = roomParent.transform;
         textures = tex;
         visibleWallCube = vwc;
         roomType = Random.value < 0.7 ? 0 : 1;
@@ -1199,7 +1208,7 @@ public class Room {
 
         }
     }
-    public void spawnFloor(Object[] floorBlocks, Object[] wallBlocks, GameObject normalPillar, GameObject libraryPillar)
+    public void spawnFloor(Object[] floorBlocks, Object[] wallBlocks, GameObject normalPillar, GameObject libraryPillar, Object[] floorObjects)
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         GameObject secondCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1319,6 +1328,14 @@ public class Room {
                         parent = wallParent;
 
                         break;
+                    case -10:
+                        tempCube = (GameObject)floorBlocks[6];
+                        parent = (GameObject)floorParentList[6];
+                        if (Random.value > 0.75)
+                        {
+                            GameObject.Instantiate(floorObjects[2], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
+                        }
+                        break;
                     /* tempCube = roomNum == 0 ? (GameObject)wallBlocks[10] : (GameObject)wallBlocks[11];
                         parent = wallParent;
                         break;*/
@@ -1344,13 +1361,38 @@ public class Room {
                         tempCube = (GameObject)floorBlocks[13 - 10];
                         rotation = floorPlanRotation[i][a];
                         parent = (GameObject)floorParentList[13 - 10];
+                        if (Random.value > 0.75)
+                        {
+                            if (roomNum == 0)
+                            {
+                                GameObject.Instantiate(floorObjects[1], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
+
+                            }
+                            else
+                            {
+                                GameObject.Instantiate(floorObjects[2], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
+
+                            }
+                        }
 
                         break;
                     case 15:
                         tempCube = (GameObject)floorBlocks[15 - 10];
                         rotation = floorPlanRotation[i][a];
                         parent = (GameObject)floorParentList[15 - 10];
+                        if (Random.value > 0.75)
+                        {
+                            if (roomNum == 0)
+                            {
+                                GameObject.Instantiate(floorObjects[1], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
 
+                            }
+                            else
+                            {
+                                GameObject.Instantiate(floorObjects[2], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
+
+                            }
+                        }
                         break;
                     default:
                         if (roomNum == 0)
@@ -1362,20 +1404,26 @@ public class Room {
                         {
                             tempCube = (GameObject)floorBlocks[6];
                             parent = (GameObject)floorParentList[6];
+                           
+
                         }
 
                         break;
                 }
                 if (index != -2)
                 {
+                    
+                    float height = roomNum == 1 ? 0f : 0.5f;
+
                     if (index == 12)
                     {
-                        GameObject.Instantiate(tempCube, new Vector3(topLeft.x - 1 / 2.0f + a, 0, topLeft.y + 1 / 2.0f - i), Quaternion.Euler(0, rotation, 0), parent.transform);
+
+                        GameObject.Instantiate(tempCube, new Vector3(topLeft.x - 1 / 2.0f + a, height, topLeft.y + 1 / 2.0f - i), Quaternion.Euler(0, rotation, 0), parent.transform);
 
                     }
                     else
                     {
-                        GameObject.Instantiate(tempCube, new Vector3(topLeft.x - 1 + a, 0, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), parent.transform);
+                        GameObject.Instantiate(tempCube, new Vector3(topLeft.x - 1 + a, height, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), parent.transform);
 
                     }
 
@@ -1474,143 +1522,145 @@ public class Room {
             }
         }
 
-
-        Vector2Int dimensionHalfed = new Vector2Int((int)Math.Ceiling(dimensions.x / 2.0), (int)Math.Ceiling(dimensions.y / 2.0));
-        int xStart = Random.Range(3, dimensions.x / 2);
-        int yStart = Random.Range(3, dimensions.y / 2);
-
-        int curveDirection = Random.value > 0.5 ? -1 : 1;
-        int featuresAdded = 0;
-        int roomFeatures = Random.Range(0, 15);
-        //roomFeatures = 7;
-        int pillar = Random.value > 0.9 ? -2 : -5;
-
-        //
-        //
-        //
-        //
-        roomParent.name += (" | DN" + roomFeatures);
-        switch (roomFeatures)
+        for(int i = 0; i < 2; i++)
         {
-            case 0: // 1 Middle Pillar
-                addMiddlePillar(new Vector2Int(0, 0), dimensions, 1, pillar);
-                break;
-            case 1: // 4 Edge Pillars
-                addMiddlePillar(new Vector2Int(0, 0), dimensionHalfed, 0, pillar);
-                addMiddlePillar(new Vector2Int(dimensions.x / 2, 0), dimensionHalfed, 0, pillar);
-                addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
+            Vector2Int dimensionHalfed = new Vector2Int((int)Math.Ceiling(dimensions.x / 2.0), (int)Math.Ceiling(dimensions.y / 2.0));
+            int xStart = Random.Range(4, dimensions.x / 2);
+            int yStart = Random.Range(4, dimensions.y / 2);
 
-                break;
-            case 2: // 2 Pillars Left, Other Side Walls
-                int start = Random.Range(3, dimensions.y / 2);
+            int curveDirection = Random.value > 0.5 ? -1 : 1;
+            int featuresAdded = 0;
+            int roomFeatures = Random.Range(0, 15);
+            //roomFeatures = 7;
+            int pillar = Random.value > 0.9 ? -2 : -5;
 
-                addMiddlePillar(new Vector2Int(0, 0), dimensionHalfed, 0, pillar);
-                addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                curvedWallY(yStart, dimensions.x - dimensions.x / 2 / 2 + 1, curveDirection * -1);
-                break;
-            case 3: // 2 Pillars on Right, Other Side Walls
-                curvedWallY(yStart, dimensions.x / 2 / 2, curveDirection);
-                addMiddlePillar(new Vector2Int(dimensions.x/2,0), dimensionHalfed, 0, pillar);
-                //addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, -3);
-                addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                break;
-            case 4: // One Pillar on Left
-                addMiddlePillar(new Vector2Int(0, 0), new Vector2Int((int)Math.Ceiling(dimensions.x / 2.0), dimensions.y), 0, pillar); // Left Half of Y 
-                curvedWallY(yStart, dimensions.x - dimensions.x / 2 / 2 + 1, curveDirection * -1);
-                break;
-            case 5: // One pillar on Right
-                addMiddlePillar(new Vector2Int(dimensions.x / 2, 0), new Vector2Int((int)Math.Ceiling(dimensions.x / 2.0), dimensions.y), 0, pillar); // Right Half of Y
-                curvedWallY(yStart, dimensions.x / 2 / 2, curveDirection);
-                break;
-            case 6: // Pillar on Bottom, curve on top
-                addMiddlePillar(new Vector2Int(0, dimensions.y / 2), new Vector2Int(dimensions.x, (int)Math.Ceiling(dimensions.y / 2.0)), 0, pillar); // Bottom X
-                curvedWallX(xStart, dimensions.y / 2 / 2, curveDirection);
-                break;
-            case 7: // Pillar on Top, Curve on Bottom
+            roomParent.name += (" | DN: " + roomFeatures);
+            switch (roomFeatures)
+            {
+                case 0: // 1 Middle Pillar
+                    addMiddlePillar(new Vector2Int(0, 0), dimensions, 1, pillar);
+                    break;
+                case 1: // 4 Edge Pillars
+                    addMiddlePillar(new Vector2Int(0, 0), dimensionHalfed, 0, pillar);
+                    addMiddlePillar(new Vector2Int(dimensions.x / 2, 0), dimensionHalfed, 0, pillar);
+                    addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
 
-                addMiddlePillar(new Vector2Int(0, 0), new Vector2Int(dimensions.x, (int)Math.Ceiling(dimensions.y / 2.0)), 0, pillar); // Top X
-                curvedWallX(xStart, dimensions.y - (dimensions.y / 2 / 2) + 1, curveDirection * -1);
-                break;
-            case 8: // Two Pillars on Bottom Curve on bottom
-                addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                curvedWallX(xStart, dimensions.y - (dimensions.y / 2 / 2) + 1, curveDirection * -1);
-                break;
-            case 9:
-                divideRoomX();
-                break;
-            case 10:
-                divideRoomY();
-                break;
-            case 11:
-                roomDecorationY();
-                break;
-            case 12:
-                roomDecorationX();
-                break;
-            case 13:
-                floorHolesY();
-                break;
-            case 14:
-                floorHolesX();
-                break;
-            case 15:
-                divideRoomX();
-                addMiddlePillar(new Vector2Int(0, 0), dimensions, 1, pillar);
-                break;
-            case 16:
-                roomDecorationY();
-                floorHolesX();
-                break;
-            case 17:
-                roomDecorationX();
-                floorHolesY();
-                break;
-            case 18: //Pillars on bottom, curve on top
-                addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                curvedWallX(xStart, dimensions.y / 2 / 2, curveDirection);
-                break;
-            case 19: // Curve on top
-                curvedWallX(xStart, dimensions.y / 2 / 2, curveDirection);
+                    break;
+                case 2: // 2 Pillars Left, Other Side Walls
+                    int start = Random.Range(3, dimensions.y / 2);
 
-                break;
-            case 20:
-                addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
-                break;
-            case 21:
-                
-                break;
-            case 22:
-                
-                break;
-            case 23:
-                
-                break;
-            case 24:
-                
-                break;
-            case 25:
-                
-                break;
-            case 26:
-                
-                break;
-            case 27:
-                    
-                break;
-            case 28:
-                    
-                break;
+                    addMiddlePillar(new Vector2Int(0, 0), dimensionHalfed, 0, pillar);
+                    addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    curvedWallY(yStart, dimensions.x - dimensions.x / 2 / 2 + 1, curveDirection * -1);
+                    break;
+                case 3: // 2 Pillars on Right, Other Side Walls
+                    curvedWallY(yStart, dimensions.x / 2 / 2, curveDirection);
+                    addMiddlePillar(new Vector2Int(dimensions.x / 2, 0), dimensionHalfed, 0, pillar);
+                    //addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, -3);
+                    addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    break;
+                case 4: // One Pillar on Left
+                    addMiddlePillar(new Vector2Int(0, 0), new Vector2Int((int)Math.Ceiling(dimensions.x / 2.0), dimensions.y), 0, pillar); // Left Half of Y 
+                    curvedWallY(yStart, dimensions.x - dimensions.x / 2 / 2 + 1, curveDirection * -1);
+                    break;
+                case 5: // One pillar on Right
+                    addMiddlePillar(new Vector2Int(dimensions.x / 2, 0), new Vector2Int((int)Math.Ceiling(dimensions.x / 2.0), dimensions.y), 0, pillar); // Right Half of Y
+                    curvedWallY(yStart, dimensions.x / 2 / 2, curveDirection);
+                    break;
+                case 6: // Pillar on Bottom, curve on top
+                    addMiddlePillar(new Vector2Int(0, dimensions.y / 2), new Vector2Int(dimensions.x, (int)Math.Ceiling(dimensions.y / 2.0)), 0, pillar); // Bottom X
+                    curvedWallX(xStart, dimensions.y / 2 / 2, curveDirection);
+                    break;
+                case 7: // Pillar on Top, Curve on Bottom
 
+                    addMiddlePillar(new Vector2Int(0, 0), new Vector2Int(dimensions.x, (int)Math.Ceiling(dimensions.y / 2.0)), 0, pillar); // Top X
+                    curvedWallX(xStart, dimensions.y - (dimensions.y / 2 / 2) + 1, curveDirection * -1);
+                    break;
+                case 8: // Two Pillars on Bottom Curve on bottom
+                    addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    curvedWallX(xStart, dimensions.y - (dimensions.y / 2 / 2) + 1, curveDirection * -1);
+                    break;
+                case 9:
+                    divideRoomX();
+                    break;
+                case 10:
+                    divideRoomY();
+                    break;
+                case 11:
+                    roomDecorationY();
+                    break;
+                case 12:
+                    roomDecorationX();
+                    break;
+                case 13:
+                    floorHolesY();
+                    break;
+                case 14:
+                    floorHolesX();
+                    break;
+                case 15:
+                    divideRoomX();
+                    addMiddlePillar(new Vector2Int(0, 0), dimensions, 1, pillar);
+                    break;
+                case 16:
+                    roomDecorationY();
+                    floorHolesX();
+                    break;
+                case 17:
+                    roomDecorationX();
+                    floorHolesY();
+                    break;
+                case 18: //Pillars on bottom, curve on top
+                    addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    curvedWallX(xStart, dimensions.y / 2 / 2, curveDirection);
+                    break;
+                case 19: // Curve on top
+                    curvedWallX(xStart, dimensions.y / 2 / 2, curveDirection);
+
+                    break;
+                case 20:
+                    addMiddlePillar(new Vector2Int(0, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    addMiddlePillar(new Vector2Int(dimensions.x / 2, dimensions.y / 2), dimensionHalfed, 0, pillar);
+                    break;
+                case 21:
+
+                    break;
+                case 22:
+
+                    break;
+                case 23:
+
+                    break;
+                case 24:
+
+                    break;
+                case 25:
+
+                    break;
+                case 26:
+
+                    break;
+                case 27:
+
+                    break;
+                case 28:
+
+                    break;
+
+            }
         }
+        
         
         if(roomNum == 0)
         {
-
-            floorTilePlacer();
+            floorTilePlacer(true);
+        }
+        else
+        {
+            floorTilePlacer(false);
         }
 
 
@@ -2027,7 +2077,7 @@ public class Room {
         }
         return true;
     }
-    void floorTilePlacer()// Tile Name + 10
+    void floorTilePlacer(bool nonLibrary)// Tile Name + 10
     {
         for (int i = 0; i < floorPlan.Length; i++)
         {
@@ -2039,17 +2089,17 @@ public class Room {
                     {
                         if (a == 1) // Top Right 
                         {
-                            floorPlan[i][a] = 15;
+                            floorPlan[i][a] = nonLibrary ? 15 : -10;
                             floorPlanRotation[i][a] = 90;
                         }
                         else if (a == floorPlan[0].Length - 2) // Top Left
                         {
-                            floorPlan[i][a] = 15;
+                            floorPlan[i][a] = nonLibrary ? 15 : -10;
                             floorPlanRotation[i][a] = 180;
                         }
                         else
                         {
-                            floorPlan[i][a] = 13;
+                            floorPlan[i][a] = nonLibrary ? 13 :  -10;
                             floorPlanRotation[i][a] = 90;
                         }
 
@@ -2058,74 +2108,78 @@ public class Room {
                     {
                         if (a == 1) // Bot Right
                         {
-                            floorPlan[i][a] = 15;
+                            floorPlan[i][a] = nonLibrary ? 15 : -10;
                             floorPlanRotation[i][a] = 0;
                         }
                         else if (a == floorPlan[0].Length - 2) // Bot Left
                         {
-                            floorPlan[i][a] = 15;
+                            floorPlan[i][a] = nonLibrary ? 15 : -10;
                             floorPlanRotation[i][a] = -90;
                         }
                         else
                         {
-                            floorPlan[i][a] = 13;
+                            floorPlan[i][a] = nonLibrary ? 13 : -10;
                             floorPlanRotation[i][a] = -90;
                         }
 
                     }
                     else if (a == 1) // Left Side
                     {
-                        floorPlan[i][a] = 13;
+                        floorPlan[i][a] = nonLibrary ? 13 : -10;
                         floorPlanRotation[i][a] = 0;
                     }
                     else if (a == floorPlan[0].Length - 2) // Right Side
                     {
-                        floorPlan[i][a] = 13;
+                        floorPlan[i][a] = nonLibrary ? 13 : -10;
                         floorPlanRotation[i][a] = 180;
                     }
                     else // In Middle somewhere
                     {
-                        float rand = Random.value;
-                        while (rand < 1.00)
+                        if (nonLibrary)
                         {
+                            float rand = Random.value;
+                            while (rand < 1.00)
+                            {
 
-                            if (rand < 0.5)
-                            {
-                                floorPlan[i][a] = 10;
-                                rand = 2;
-                            }
-                            else if (rand < 0.95)
-                            {
-                                floorPlan[i][a] = 11;
-                                rand = 2;
-
-                            }
-                            else
-                            {
-                                if (i + 1 < floorPlan.Length - 1 && i - 1 > -1 && a + 1 < floorPlan[0].Length - 2 && a - 1 > -1 && i < floorPlan.Length - 3 && a < floorPlan[0].Length - 3)
+                                if (rand < 0.5)
                                 {
-                                    if (floorPlan[i + 1][a] == -1 && floorPlan[i + 1][a + 1] == -1 && floorPlan[i][a + 1] == -1 && floorPlan[i][a] == -1)
-                                    {
-                                        floorPlan[i][a] = 12;
-                                        floorPlan[i + 1][a] = -2;
-                                        floorPlan[i + 1][a + 1] = -2;
-                                        floorPlan[i][a + 1] = -2;
-                                        rand = 2;
+                                    floorPlan[i][a] = 10;
+                                    rand = 2;
+                                }
+                                else if (rand < 0.95)
+                                {
+                                    floorPlan[i][a] = 11;
+                                    rand = 2;
 
+                                }
+                                else
+                                {
+                                    if (i + 1 < floorPlan.Length - 1 && i - 1 > -1 && a + 1 < floorPlan[0].Length - 2 && a - 1 > -1 && i < floorPlan.Length - 3 && a < floorPlan[0].Length - 3)
+                                    {
+                                        if (floorPlan[i + 1][a] == -1 && floorPlan[i + 1][a + 1] == -1 && floorPlan[i][a + 1] == -1 && floorPlan[i][a] == -1)
+                                        {
+                                            floorPlan[i][a] = 12;
+                                            floorPlan[i + 1][a] = -2;
+                                            floorPlan[i + 1][a + 1] = -2;
+                                            floorPlan[i][a + 1] = -2;
+                                            rand = 2;
+
+                                        }
+                                        else
+                                        {
+                                            rand = Random.value;
+                                        }
                                     }
                                     else
                                     {
                                         rand = Random.value;
+
                                     }
-                                }
-                                else
-                                {
-                                    rand = Random.value;
 
                                 }
-
                             }
                         }
+                        
 
                     }
                 }
