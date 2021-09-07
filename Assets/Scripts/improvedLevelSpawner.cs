@@ -340,6 +340,7 @@ public class Room {
         floorParent.name = roomParent.name + "|Floor";
         wallParent.name = roomParent.name + "|Wall";
         pathParent.name = roomParent.name + "|Path";
+        decorationParent.name = roomParent.name + "|Decoration";
         floorParent.transform.parent = roomParent.transform;
         pathParent.transform.parent = roomParent.transform;
         wallParent.transform.parent = roomParent.transform;
@@ -1333,7 +1334,7 @@ public class Room {
                         parent = (GameObject)floorParentList[6];
                         if (Random.value > 0.75)
                         {
-                            GameObject.Instantiate(floorObjects[2], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
+                            GameObject go = GameObject.Instantiate(floorObjects[Random.Range(4,8)], new Vector3(topLeft.x - 1 + a, 0.5f, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
                         }
                         break;
                     /* tempCube = roomNum == 0 ? (GameObject)wallBlocks[10] : (GameObject)wallBlocks[11];
@@ -1363,18 +1364,11 @@ public class Room {
                         parent = (GameObject)floorParentList[13 - 10];
                         if (Random.value > 0.75)
                         {
-                            if (roomNum == 0)
-                            {
-                                GameObject.Instantiate(floorObjects[1], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
+                            
+                                GameObject.Instantiate(floorObjects[Random.Range(1,4)], new Vector3(topLeft.x - 1 + a, 0.6f, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
 
-                            }
-                            else
-                            {
-                                GameObject.Instantiate(floorObjects[2], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
-
-                            }
                         }
-
+                        f
                         break;
                     case 15:
                         tempCube = (GameObject)floorBlocks[15 - 10];
@@ -1382,16 +1376,10 @@ public class Room {
                         parent = (GameObject)floorParentList[15 - 10];
                         if (Random.value > 0.75)
                         {
-                            if (roomNum == 0)
-                            {
-                                GameObject.Instantiate(floorObjects[1], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
+                            
+                                GameObject.Instantiate(floorObjects[Random.Range(1,4)], new Vector3(topLeft.x - 1 + a, 0.6f, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
 
-                            }
-                            else
-                            {
-                                GameObject.Instantiate(floorObjects[2], new Vector3(topLeft.x - 1 + a, 1, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
-
-                            }
+                            
                         }
                         break;
                     default:
@@ -2193,7 +2181,7 @@ public class Room {
         for(int b =0; b < roomParent.transform.childCount; b++)
         {
             GameObject currGO = roomParent.transform.GetChild(b).gameObject;
-            if (!currGO.Equals(wallParent) && !currGO.Equals(floorParent) && !currGO.Equals(pathParent))   {
+            if (!currGO.Equals(wallParent) && !currGO.Equals(floorParent) && !currGO.Equals(pathParent) && !currGO.Equals(decorationParent))   {
                 if (currGO.transform.childCount > 0)
                 {
                     Material tempMat = currGO.transform.GetChild(0).GetComponent<MeshRenderer>().material;
