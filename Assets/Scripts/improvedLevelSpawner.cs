@@ -1334,7 +1334,7 @@ public class Room {
                         parent = (GameObject)floorParentList[6];
                         if (Random.value > 0.75)
                         {
-                            GameObject go = GameObject.Instantiate(floorObjects[Random.Range(4,8)], new Vector3(topLeft.x - 1 + a, 0.5f, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
+                            GameObject go = GameObject.Instantiate((GameObject) floorObjects[Random.Range(4,8)], new Vector3(topLeft.x - 1 + a, 0.5f, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
                         }
                         break;
                     /* tempCube = roomNum == 0 ? (GameObject)wallBlocks[10] : (GameObject)wallBlocks[11];
@@ -1368,7 +1368,7 @@ public class Room {
                                 GameObject.Instantiate(floorObjects[Random.Range(1,4)], new Vector3(topLeft.x - 1 + a, 0.6f, topLeft.y + 1 - i), Quaternion.Euler(0, rotation, 0), decorationParent.transform);
 
                         }
-                        f
+                        
                         break;
                     case 15:
                         tempCube = (GameObject)floorBlocks[15 - 10];
@@ -1682,7 +1682,6 @@ public class Room {
                         floorPlan[newTopLeft.y + a][newTopLeft.x + i]  = pillarNum;
                     }
                 }
-                Debug.Log("COLORING");
                 for (int i = (int)middleBlock.x - scale - 1; i < middleBlock.x + 3 + scale; i++)
                 {
                     for (int a = (int)middleBlock.y + 3 + scale; a > middleBlock.y - 2 - scale; a--)
